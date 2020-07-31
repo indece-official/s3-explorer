@@ -32,13 +32,8 @@ dependencies: dependencies_frontend dependencies_backend
 lint: lint_frontend
 
 prepare_sign:
-ifndef CODESIGN_PASSWORD
-	@echo -n "Code-Sign-Password: " ; \
-	read password ; \
-	export CODESIGN_PASSWORD=$$password
-endif
-	test -n "${CODESIGN_CERT}"
-	@test -n "${CODESIGN_PASSWORD}"
+	@test -n "${CODESIGN_CERT}" || (echo "ERROR: env 'CODESIGN_CERT' not set" && false)
+	@test -n "${CODESIGN_PASSWORD}" || (echo "ERROR: env 'CODESIGN_PASSWORD' not set" && false)
 
 dependencies_frontend:
 	cd ./frontend && npm ci

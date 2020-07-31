@@ -18,6 +18,7 @@ github.com/indece-official/go-gousu v1.0.0/go.mod h1:XyiaZkUB062A5TUu8oiZjLlcM4C
 github.com/indece-official/go-gousu v1.1.0 h1:qqoaLVVL4nYoxEzU/VT4Xjx0NRY6nzgQe6Ow4G2LPuY=
 github.com/indece-official/go-gousu v1.1.0/go.mod h1:XyiaZkUB062A5TUu8oiZjLlcM4CXL2LysRiOLurmcoI=
 github.com/indece-official/s3-explorer v0.0.0-20200715213558-426fa506a755 h1:QgTdv/YwFtJtQMNej5Le8aic0cDQD80SgAAZKzzhCWg=
+github.com/indece-official/s3-explorer v0.0.0-20200731154619-904dfc8d4fb2 h1:yz8O5sFIFCjnxCeZSwzErtnGS12W8Og6TfLIZJu9k2A=
 github.com/jmespath/go-jmespath v0.3.0 h1:OS12ieG61fsCg5+qLJ+SsW9NicxNkg3b25OyT2yCeUc=
 github.com/jmespath/go-jmespath v0.3.0/go.mod h1:9QtRXoHjLGCJ5IBSaohpXITPlowMeeYCZ7fLUTSywik=
 github.com/namsral/flag v1.7.4-pre h1:b2ScHhoCUkbsq0d2C15Mv+VU8bl8hAXV8arnWiOHNZs=

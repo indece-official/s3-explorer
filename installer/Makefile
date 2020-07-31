@@ -14,10 +14,23 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-all: build
+all: collect_licenses build_linux build_windows
 
-build:
+collect_licenses:
+	rm -rf /tmp/s3-explorer-build-licenses
+	cd ../backend/ && go-licenses save ./... --save_path /tmp/s3-explorer-build-licenses/ || true
+	rm -rf /tmp/s3-explorer-build-licenses/github.com/indece-official
+	OUTPUTFILE="$$PWD/assets/bin/licenses.zip" && \
+	rm -f $$OUTPUTFILE && \
+	cd /tmp/s3-explorer-build-licenses && \
+	zip -r $$OUTPUTFILE ./*
+
+build_windows:
 	docker run --rm -i -v "$$PWD:/work" -e "BUILD_VERSION=${BUILD_VERSION}" amake/innosetup ./setup.iss
+
+build_linux:
+	tar -zcvf ./dist/s3-explorer_v${BUILD_VERSION}_linux64.tar.gz \
+	-C ./assets/bin/ LICENSE.txt licenses.zip s3-explorer
 
 sign:
 	# Sign installer
@@ -29,4 +42,4 @@ sign:
 	-n "Installer for S3 Explorer" \
 	-i https://www.indece.com/ \
 	-in ./dist/s3-explorer-setup_win64-unsigned.exe \
-	-out ./dist/s3-explorer-setup_win64.exe
+	-out ./dist/s3-explorer-setup_v${BUILD_VERSION}_win64.exe
