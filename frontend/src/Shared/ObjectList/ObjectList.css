@@ -1,0 +1,98 @@
+.ObjectList {
+    position: relative;
+}
+
+.ObjectList-list {
+    width: 100%;
+    height: 100%;
+}
+
+.ObjectList-header {
+    background: #D7B36A;
+    color: #fff;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    height: 28px;
+}
+
+.ObjectList-header-key,
+.ObjectList-object-key {
+    padding: 5px 10px;
+    flex-basis: 0;
+    flex-grow: 40;
+    flex-shrink: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ObjectList-header-owner,
+.ObjectList-object-owner {
+    padding: 5px 10px;
+    flex-basis: 0;
+    flex-grow: 15;
+    flex-shrink: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ObjectList-header-last-modified,
+.ObjectList-object-last-modified {
+    padding: 5px 10px;
+    flex-basis: 0;
+    flex-grow: 25;
+    flex-shrink: 0;
+}
+
+.ObjectList-header-size,
+.ObjectList-object-size {
+    padding: 5px 10px;
+    flex-basis: 0;
+    flex-grow: 15;
+    flex-shrink: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ObjectList-header-actions,
+.ObjectList-object-actions {
+    padding: 5px 10px;
+    flex-basis: 50px;
+    flex-grow: 0;
+    flex-shrink: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: right;
+}
+
+.ObjectList-header-actions > svg,
+.ObjectList-object-actions > svg {
+    cursor: pointer;
+    margin-left: 5px;
+    margin-right: 5px;
+}
+
+.ObjectList-objects {
+    overflow-y: auto;
+    overflow-x: hidden;
+    height: calc(100% - 28px);
+}
+
+.ObjectList-empty {
+    text-align: center;
+    font-style: italic;
+    padding: 10px 10px;
+    opacity: 0.6;
+}
+
+.ObjectList-object {
+    white-space: nowrap;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    cursor: pointer;
+}
+
+.ObjectList-object:hover {
+    color: #0F4E51;
+}

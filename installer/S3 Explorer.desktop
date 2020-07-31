@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=S3 Explorer
+Exec=s3-explorer
+Icon=s3-explorer.png
+Type=Application
+Categories=GTK;GNOME;Utility;

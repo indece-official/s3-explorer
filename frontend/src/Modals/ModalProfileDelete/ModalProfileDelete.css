@@ -1,0 +1,14 @@
+.ModalProfileDelete-text {
+    padding: 20px 10px;
+    max-width: 250px;
+}
+
+.ModalProfileDelete-actions {
+    padding: 5px 10px;
+    position: relative;
+}
+
+.ModalProfileDelete-actions .Button {
+    width: 100%;
+}
+

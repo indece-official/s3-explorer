@@ -1,0 +1,37 @@
+.ModalProfileSelect-actions {
+    padding: 5px 10px;
+    position: relative;
+}
+
+.ModalProfileSelect-actions .Button {
+    width: 100%;
+}
+
+.ModalProfileSelect-profile {
+    position: relative;
+}
+
+.ModalProfileSelect-profile-name {
+    cursor: pointer;
+    padding: 5px 10px;
+}
+
+.ModalProfileSelect-profile-actions {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.5);
+    white-space: nowrap;
+}
+
+.ModalProfileSelect-profile-actions > svg {
+    padding: 5px 10px;
+    cursor: pointer;
+}
+
+
+.ModalProfileSelect-profile:hover .ModalProfileSelect-profile-actions {
+    display: block;
+}

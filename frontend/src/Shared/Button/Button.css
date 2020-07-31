@@ -1,0 +1,24 @@
+button {
+    display: inline-block;
+    max-width: 100%;
+    font-size: 14px;
+    font-weight: bold;
+    color: #fff;
+    text-align: center;
+    cursor: pointer;
+    background: #0F4E51;
+    border: none;
+    border-radius: 2px;
+    padding: 5px 10px;
+    outline: 0;
+    min-width: 80px;
+}
+
+button:not(.disabled):hover {
+    color: #D7B36A;
+}
+
+button.disabled {
+    cursor: normal;
+    opacity: 0.3;
+}

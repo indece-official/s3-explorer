@@ -1,0 +1,57 @@
+.Input {
+    margin-bottom: 10px;
+    font-size: 14px;
+}
+
+.Input.Input-checkbox {
+    color: #333;
+}
+
+.Input.Input-checkbox input {
+    vertical-align: middle;
+    margin-right: 5px;
+}
+
+.Input .Input-checkbox-label {
+    display: flex;
+}
+
+.Input.Input-checkbox .Input-label {
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.Input-input input,
+.Input-input select {
+    box-sizing: border-box;
+    display: block;
+    width: 100%;
+    margin-bottom: 3px;
+    padding: 3px 5px;
+    border-radius: 0;
+    border-top: 0;
+    border-left: 0;
+    border-right: 0;
+    border-bottom: 1px solid #0F4E51;
+    outline: none;
+}
+
+.Input-input select {
+    cursor: pointer;
+}
+
+.Input-input.invalid input,
+.Input-input.invalid select,
+.Input-input input:invalid,
+.Input-input select:invalid {
+    border: 1px solid #861B18;
+}
+
+.Input-checkbox-label.invalid input {
+    outline: 1px solid #861B18;
+}
+
+.Input-error {
+    color: #861B18;
+    font-size: 12px;
+}

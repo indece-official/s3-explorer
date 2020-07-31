@@ -1,0 +1,55 @@
+.App {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    height: 100vh;
+    width: 100vw;
+}
+
+.App .NavBar {
+    flex-grow: 0;
+    flex-shrink: 0;
+}
+
+.App-path {
+    padding: 5px 10px;
+    color: #888;
+    flex-grow: 0;
+    flex-shrink: 0;
+}
+
+.App-content {
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.App-content-lists {
+    height: 100%;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+}
+
+.App-content .BucketList {
+    flex-basis: 100px;
+    flex-grow: 1;
+    margin-right: 5px;
+}
+
+.App-content .ObjectList {
+    flex-basis: 300px;
+    flex-grow: 5;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.App-error {
+    color: #fff;
+    background: #861B18;
+    padding: 5px 10px;
+    flex-grow: 0;
+    flex-shrink: 0;
+}

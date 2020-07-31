@@ -1,0 +1,14 @@
+.ModalBucketDelete-text {
+    padding: 20px 10px;
+    max-width: 250px;
+}
+
+.ModalBucketDelete-actions {
+    padding: 5px 10px;
+    position: relative;
+}
+
+.ModalBucketDelete-actions .Button {
+    width: 100%;
+}
+

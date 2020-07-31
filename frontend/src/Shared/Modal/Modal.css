@@ -1,0 +1,52 @@
+.Modal-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.Modal-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+}
+
+.Modal {
+    position: absolute;
+    display: inline-block;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background: #fff;
+    min-width: 200px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+}
+
+.Modal-header {
+    padding: 5px 10px;
+    background: #0F4E51;
+    color: #fff;
+    margin-bottom: 5px;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+}
+
+.Modal-title {
+    flex-shrink: 0;
+    flex-grow: 1;
+    font-size: 14px;
+    margin-right: 20px;
+}
+
+.Modal-close {
+    flex-shrink: 0;
+    flex-grow: 0;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+}

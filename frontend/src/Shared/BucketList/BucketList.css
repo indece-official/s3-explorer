@@ -1,0 +1,72 @@
+/* http://paletton.com/#uid=33j0u0klllLaRwNgfqYqogPvKbo */
+
+.BucketList-header {
+    background: #D7B36A;
+    color: #fff;
+    font-weight: normal;
+    padding: 5px 10px;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    height: 28px;
+    box-sizing: border-box;
+}
+
+.BucketList-header-title {
+    flex-shrink: 0;
+    flex-grow: 1;
+}
+
+.BucketList-header-actions {
+    margin-left: 20px;
+    flex-grow: 0;
+    flex-shrink: 0;
+    font-weight: normal;
+    font-size: 14px;
+}
+
+.BucketList-header-actions > svg {
+    cursor: pointer;
+    margin-left: 5px;
+}
+
+.BucketList-buckets {
+    margin-top: 5px;
+    font-size: 14px;
+}
+
+.BucketList-empty {
+    text-align: center;
+    font-style: italic;
+    padding: 10px 10px;
+    opacity: 0.6;
+}
+
+.BucketList-bucket {
+    width: 100%;
+    position: relative;
+}
+
+.BucketList-bucket-selected {
+    background-color: #FFE3A9;
+}
+
+.BucketList-bucket-name {
+    padding: 5px 10px;
+    cursor: pointer;
+}
+
+.BucketList-bucket-actions {
+    display: none;
+    cursor: pointer;
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    padding: 5px 10px;
+    background: rgba(255, 255, 255, 0.5);
+}
+
+.BucketList-bucket:hover .BucketList-bucket-actions {
+    display: block;
+}

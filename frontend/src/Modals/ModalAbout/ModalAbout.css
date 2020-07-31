@@ -1,0 +1,12 @@
+.ModalAbout-title {
+    padding: 20px 10px;
+    max-width: 250px;
+    font-weight: bold;
+    text-align: center;
+}
+
+.ModalAbout-text {
+    padding: 20px 10px;
+    max-width: 250px;
+}
+

@@ -1,0 +1,16 @@
+.ModalProfileAdd-inputs {
+    padding: 5px 10px;
+}
+
+.ModalProfileAdd-actions {
+    padding: 5px 10px;
+    position: relative;
+}
+
+.ModalProfileAdd-actions .Button {
+    width: 100%;
+}
+
+.ModalProfileAdd-advanced-toggle {
+    cursor: pointer;
+}

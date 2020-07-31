@@ -1,0 +1,23 @@
+.DownloadManager {
+    padding: 5px 10px; 
+}
+
+.DownloadManager-download {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+}
+
+.DownloadManager-download-filename {
+    flex-basis: 200px;
+    flex-grow: 2;
+    flex-shrink: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.DownloadManager-download > .ProgressBar {
+    flex-basis: 100px;
+    flex-grow: 1;
+    flex-shrink: 1;
+}

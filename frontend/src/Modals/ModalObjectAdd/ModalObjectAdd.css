@@ -1,0 +1,17 @@
+.ModalObjectAdd-progress {
+    padding: 5px 10px;
+}
+
+.ModalObjectAdd-inputs {
+    padding: 5px 10px;
+}
+
+.ModalObjectAdd-actions {
+    padding: 5px 10px;
+    position: relative;
+}
+
+.ModalObjectAdd-actions .Button {
+    width: 100%;
+}
+

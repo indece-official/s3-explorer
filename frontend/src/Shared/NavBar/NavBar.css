@@ -1,0 +1,21 @@
+.NavBar {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    background: #0F4E51;
+    color: #fff;
+}
+
+.NavBar-item {
+    cursor: pointer;
+    flex-grow: 0;
+    padding: 5px 10px;
+}
+
+.NavBar-item:hover {
+    color: #D7B36A;
+}
+
+.NavBar-spacer {
+    flex-grow: 1;
+}

@@ -1,0 +1,47 @@
+.ModalObjectDetails-title {
+    padding: 5px 10px;
+    max-width: 250px;
+    font-weight: bold;
+    text-align: center;
+    margin-top: 15px;
+}
+
+.ModalObjectDetails-subtitle {
+    padding: 5px 10px;
+    max-width: 250px;
+    margin-bottom: 15px;
+    text-align: center;
+    font-style: italic;
+}
+
+.ModalObjectDetails-attributes {
+    margin-bottom: 10px;
+    position: relative;
+    margin-left: 10px;
+    margin-right: 10px;
+    margin-top: 10px;
+    font-size: 14px;
+}
+
+.ModalObjectDetails-attribute {
+    margin-bottom: 3px;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+}
+
+.ModalObjectDetails-attribute-label {
+    display: inline-block;
+    flex-basis: 120px;
+    flex-grow: 0;
+    flex-shrink: 0;
+}
+
+.ModalObjectDetails-attribute-value {
+    display: inline-block;
+    flex-basis: 150px;
+    flex-shrink: 0;
+    flex-grow: 1;
+    max-width: 250px;
+    word-break: break-all;
+}

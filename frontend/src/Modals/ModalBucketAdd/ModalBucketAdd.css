@@ -1,0 +1,13 @@
+.ModalBucketAdd-inputs {
+    padding: 5px 10px;
+}
+
+.ModalBucketAdd-actions {
+    padding: 5px 10px;
+    position: relative;
+}
+
+.ModalBucketAdd-actions .Button {
+    width: 100%;
+}
+
