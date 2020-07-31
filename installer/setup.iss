@@ -51,6 +51,8 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 
 [Files]
 Source: "assets/bin/s3-explorer_win64.exe"; DestDir: "{app}"; DestName: "s3-explorer.exe"; Flags: ignoreversion
+Source: "assets/bin/LICENSE.txt"; DestDir: "{app}"; Flags: ignoreversion
+Source: "assets/bin/licenses.zip"; DestDir: "{app}"; Flags: ignoreversion
 Source: "assets/webview.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "assets/WebView2Loader.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "assets/s3-explorer.png"; DestDir: "{app}"; Flags: ignoreversion
