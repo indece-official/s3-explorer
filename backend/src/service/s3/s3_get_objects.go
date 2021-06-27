@@ -20,34 +20,43 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/indece-official/s3-explorer/backend/src/model"
+	"gopkg.in/guregu/null.v4"
 )
 
 // GetObjects loads a list of max. 1000 objects from the given bucket
-func (s *Service) GetObjects(profile *model.ProfileV1, bucket string) ([]*model.ObjectV1, error) {
+func (s *Service) GetObjects(profile *model.ProfileV1, bucket string, continuationToken null.String, size int64) ([]*model.ObjectV1, string, error) {
 	objects := []*model.ObjectV1{}
 
 	s3Client, err := s.getClient(profile)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	listObjectsOutput, err := s3Client.ListObjectsV2(&s3.ListObjectsV2Input{
-		Bucket:     aws.String(bucket),
-		FetchOwner: aws.Bool(true),
+		Bucket:            aws.String(bucket),
+		FetchOwner:        aws.Bool(true),
+		ContinuationToken: continuationToken.Ptr(),
+		MaxKeys:           aws.Int64(size),
 	})
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	for _, object := range listObjectsOutput.Contents {
 		objects = append(objects, &model.ObjectV1{
-			Key:          *object.Key,
-			LastModified: *object.LastModified,
-			OwnerName:    *object.Owner.DisplayName,
-			OwnerID:      *object.Owner.ID,
-			Size:         *object.Size,
+			Key:          aws.StringValue(object.Key),
+			LastModified: aws.TimeValue(object.LastModified),
+			OwnerName:    aws.StringValue(object.Owner.DisplayName),
+			OwnerID:      aws.StringValue(object.Owner.ID),
+			Size:         aws.Int64Value(object.Size),
 		})
 	}
 
-	return objects, nil
+	nextContinuationToken := ""
+
+	if aws.BoolValue(listObjectsOutput.IsTruncated) {
+		nextContinuationToken = aws.StringValue(listObjectsOutput.NextContinuationToken)
+	}
+
+	return objects, nextContinuationToken, nil
 }

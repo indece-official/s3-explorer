@@ -136,7 +136,7 @@ export class BucketList extends React.Component<BucketListProps, BucketListState
                                 </div>
                             </div>
                         )
-                    : (this.props.profileID && this.state.buckets.length == 0 ? 
+                    : (this.props.profileID && this.state.buckets.length === 0 ? 
                         <div className='BucketList-empty'>No buckets found.</div>
                     : 
                         <div className='BucketList-empty'>No profile selected.</div>

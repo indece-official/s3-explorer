@@ -12,6 +12,13 @@ export interface ObjectV1
 }
 
 
+export interface GetObjectsV1Response
+{
+    objects:            Array<ObjectV1>;
+    continuation_token: string;
+}
+
+
 export class S3ObjectService
 {
     private static _instance: S3ObjectService;
@@ -45,10 +52,10 @@ export class S3ObjectService
     }
 
 
-    public async getObjects ( profileID: number, bucketName: string ): Promise<Array<ObjectV1>>
+    public async getObjects ( profileID: number, bucketName: string, continuationToken: string, size: number ): Promise<GetObjectsV1Response>
     {
         const resp = await this._backendService.fetchJson(
-            `/api/v1/profile/${encodeURIComponent(profileID)}/bucket/${encodeURIComponent(bucketName)}/object`,
+            `/api/v1/profile/${encodeURIComponent(profileID)}/bucket/${encodeURIComponent(bucketName)}/object?size=${encodeURIComponent(size)}&continuation_token=${encodeURIComponent(continuationToken)}`,
             {
                 method:     'GET',
                 headers:    {
@@ -57,7 +64,7 @@ export class S3ObjectService
             }
         );
 
-        return resp.objects;
+        return resp;
     }
 
 

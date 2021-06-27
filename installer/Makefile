@@ -26,9 +26,11 @@ collect_licenses:
 	zip -r $$OUTPUTFILE ./*
 
 build_windows:
+	mkdir -p ./dist && \
 	docker run --rm -i -v "$$PWD:/work" -e "BUILD_VERSION=${BUILD_VERSION}" amake/innosetup ./setup.iss
 
 build_linux:
+	mkdir -p ./dist && \
 	tar -zcvf ./dist/s3-explorer_v${BUILD_VERSION}_linux64.tar.gz \
 	-C ./assets/bin/ LICENSE.txt licenses.zip s3-explorer
 

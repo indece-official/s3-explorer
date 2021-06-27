@@ -12,4 +12,5 @@ require (
 	github.com/shurcooL/vfsgen v0.0.0-20200627165143-92b8a710ab6c // indirect
 	github.com/zserge/webview v0.0.0-20200712140540-e08a32b4ebab
 	golang.org/x/tools v0.0.0-20200723165920-188b38280e32 // indirect
+	gopkg.in/guregu/null.v4 v4.0.0 // indirect
 )

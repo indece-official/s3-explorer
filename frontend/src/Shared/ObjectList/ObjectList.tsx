@@ -1,12 +1,14 @@
 import * as React from 'react';
 import Bytes from 'bytes';
 import Moment from 'moment';
+import InfiniteScroll from 'react-infinite-scroller';
 import { ObjectV1, S3ObjectService } from '../Service/ObjectService';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSync, faTimes, faDownload } from '@fortawesome/free-solid-svg-icons';
+import { DownloadManagerService } from '../DownloadManager/DownloadManagerService';
+import { Spinner } from '../Spinner/Spinner';
 
 import './ObjectList.css';
-import { DownloadManagerService } from '../DownloadManager/DownloadManagerService';
 
 
 export interface ObjectListProps
@@ -21,12 +23,16 @@ export interface ObjectListProps
 
 interface ObjectListState
 {
-    objects: Array<ObjectV1>;
+    objects:            Array<ObjectV1>;
+    hasMore:            boolean;
+    loading:            boolean;
+    continuationToken:  string;
 }
 
 
 export class ObjectList extends React.Component<ObjectListProps, ObjectListState>
 {
+    private readonly BULK_SIZE                  = 100;
     private readonly _s3ObjectService:          S3ObjectService;
     private readonly _downloadManagerService:   DownloadManagerService;
 
@@ -36,13 +42,17 @@ export class ObjectList extends React.Component<ObjectListProps, ObjectListState
         super(props);
 
         this.state = {
-            objects: []
+            objects:            [],
+            hasMore:            false,
+            loading:            false,
+            continuationToken:  ''
         };
 
         this._s3ObjectService = S3ObjectService.getInstance();
         this._downloadManagerService = DownloadManagerService.getInstance();
 
         this._load = this._load.bind(this);
+        this._loadMore = this._loadMore.bind(this);
     }
 
 
@@ -51,18 +61,33 @@ export class ObjectList extends React.Component<ObjectListProps, ObjectListState
         if ( !this.props.profileID || !this.props.bucketName )
         {
             this.setState({
-                objects: []
+                objects:            [],
+                continuationToken:  '',
+                hasMore:            false
             });
 
             return;
         }
 
+        this.setState({
+            loading:    true,
+            objects:    []
+        });
+
         try
         {
-            const objects = await this._s3ObjectService.getObjects(this.props.profileID, this.props.bucketName);
+            const resp = await this._s3ObjectService.getObjects(
+                this.props.profileID,
+                this.props.bucketName,
+                "",
+                this.BULK_SIZE
+            );
 
             this.setState({
-                objects
+                objects:            resp.objects,
+                continuationToken:  resp.continuation_token,
+                hasMore:            !!(resp.continuation_token && resp.objects.length >= this.BULK_SIZE),
+                loading:            false
             });
 
             this.props.onError(null);
@@ -72,6 +97,52 @@ export class ObjectList extends React.Component<ObjectListProps, ObjectListState
             console.error(`Error loading objects: ${err.message}`, err);
 
             this.props.onError(err);
+
+            this.setState({
+                loading:    false
+            });
+        }
+    }
+    
+    private async _loadMore ( ): Promise<void>
+    {
+        if ( !this.state.continuationToken || !this.state.hasMore || this.state.loading )
+        {
+            return;
+        }
+
+        this.setState({
+            loading:    true
+        });
+
+        try
+        {
+            const resp = await this._s3ObjectService.getObjects(
+                this.props.profileID,
+                this.props.bucketName,
+                this.state.continuationToken,
+                this.BULK_SIZE
+            );
+
+            this.setState({
+                objects:            [...this.state.objects, ...resp.objects],
+                continuationToken:  resp.continuation_token,
+                hasMore:            !!(resp.continuation_token && resp.objects.length >= this.BULK_SIZE),
+                loading:            false
+            });
+
+            this.props.onError(null);
+        }
+        catch ( err )
+        {
+            console.error(`Error loading objects: ${err.message}`, err);
+
+            this.props.onError(err);
+
+            this.setState({
+                loading:    false,
+                hasMore:    false
+            });
         }
     }
 
@@ -101,7 +172,7 @@ export class ObjectList extends React.Component<ObjectListProps, ObjectListState
     {
         await this._load();
 
-        this._s3ObjectService.updated().subscribe(this, this._load.bind(this));
+        this._s3ObjectService.updated().subscribe(this, this._load);
     }
 
 
@@ -139,51 +210,65 @@ export class ObjectList extends React.Component<ObjectListProps, ObjectListState
                     </div>
 
                     <div className='ObjectList-objects'>
-                        {this.props.bucketName && this.state.objects.length > 0 ?
-                            this.state.objects.map( ( object ) => 
-                                <div
-                                    className='ObjectList-object'
-                                    key={object.key}>
+                        <InfiniteScroll
+                            pageStart={0}
+                            loadMore={this._loadMore}
+                            initialLoad={false}
+                            hasMore={this.state.hasMore}
+                            threshold={50}
+                            useWindow={false}>
+                            {this.props.bucketName && this.state.objects.length > 0 ?
+                                this.state.objects.map( ( object ) => 
                                     <div
-                                        className='ObjectList-object-key'
-                                        title={object.key}
-                                        onClick={ ( ) => this.props.onSelectObject(object) }>
-                                        {object.key}
-                                    </div>
+                                        className='ObjectList-object'
+                                        key={object.key}>
+                                        <div
+                                            className='ObjectList-object-key'
+                                            title={object.key}
+                                            onClick={ ( ) => this.props.onSelectObject(object) }>
+                                            {object.key}
+                                        </div>
 
-                                    <div
-                                        className='ObjectList-object-owner'
-                                        title={`${object.owner_name} (${object.owner_id})`}
-                                        onClick={ ( ) => this.props.onSelectObject(object) }>
-                                        {object.owner_name}
-                                    </div>
+                                        <div
+                                            className='ObjectList-object-owner'
+                                            title={`${object.owner_name} (${object.owner_id})`}
+                                            onClick={ ( ) => this.props.onSelectObject(object) }>
+                                            {object.owner_name}
+                                        </div>
 
-                                    <div
-                                        className='ObjectList-object-last-modified'
-                                        title={object.last_modified}
-                                        onClick={ ( ) => this.props.onSelectObject(object) }>
-                                        {Moment(object.last_modified).format('YYYY-MM-DD HH:mm:ss')}
+                                        <div
+                                            className='ObjectList-object-last-modified'
+                                            title={object.last_modified}
+                                            onClick={ ( ) => this.props.onSelectObject(object) }>
+                                            {Moment(object.last_modified).format('YYYY-MM-DD HH:mm:ss')}
+                                        </div>
+            
+                                        <div
+                                            className='ObjectList-object-size'
+                                            title={`${object.size} B`}
+                                            onClick={ ( ) => this.props.onSelectObject(object) }>
+                                            {Bytes.format(object.size, {unitSeparator: ' '})}
+                                        </div>
+                    
+                                        <div
+                                            className='ObjectList-object-actions'>
+                                            <FontAwesomeIcon icon={faDownload} onClick={ ( ) => this._downloadObject(object) } />
+                                            <FontAwesomeIcon icon={faTimes} onClick={ ( ) => this.props.onDeleteObject(object) } />
+                                        </div>
                                     </div>
-        
-                                    <div
-                                        className='ObjectList-object-size'
-                                        title={`${object.size} B`}
-                                        onClick={ ( ) => this.props.onSelectObject(object) }>
-                                        {Bytes.format(object.size, {unitSeparator: ' '})}
-                                    </div>
-                
-                                    <div
-                                        className='ObjectList-object-actions'>
-                                        <FontAwesomeIcon icon={faDownload} onClick={ ( ) => this._downloadObject(object) } />
-                                        <FontAwesomeIcon icon={faTimes} onClick={ ( ) => this.props.onDeleteObject(object) } />
-                                    </div>
-                                </div>
-                            )
-                        : (this.props.bucketName && this.state.objects.length == 0 ? 
-                            <div className='ObjectList-empty'>No objects found.</div>
-                        : 
-                            <div className='ObjectList-empty'>No bucket selected.</div>
-                        )}
+                                )
+                            : null}
+
+                            <Spinner active={this.state.loading} />
+                            
+                            {!this.state.loading && this.props.bucketName && this.state.objects.length === 0 ? 
+                                <div className='ObjectList-empty'>No objects found.</div>
+                            : null}
+
+                            {!this.state.loading && !this.props.bucketName ? 
+                                <div className='ObjectList-empty'>No bucket selected.</div>
+                            : null}
+                        </InfiniteScroll>
                     </div>
                 </div>
             </div>

@@ -216,6 +216,20 @@ paths:
         example: 'test-bucket'
         schema:
           type: string
+      - name: size
+        in: query
+        description: Size of result set
+        required: false
+        schema:
+          type: integer
+          default: 100
+      - name: bucketName
+        in: query
+        description: Name of bucket
+        required: true
+        example: 'test-bucket'
+        schema:
+          type: string
       responses:
         200:
           description: OK
@@ -343,8 +357,11 @@ components:
       type: object
       required:
       - 'objects'
+      - 'continuation_token'
       properties:
         objects:
           type: array
           items:
             $ref: '#/components/schemas/ObjectV1'
+        continuation_token:
+          type: string

@@ -24,6 +24,7 @@ import (
 
 	"github.com/indece-official/s3-explorer/backend/src/generated/model/webapi"
 	"github.com/indece-official/s3-explorer/backend/src/model"
+	"gopkg.in/guregu/null.v4"
 
 	"github.com/go-chi/chi"
 )
@@ -65,6 +66,27 @@ func (c *Controller) reqAPIV1GetProfileBucketObjects(w http.ResponseWriter, r *h
 		return
 	}
 
+	size := int64(100)
+
+	sizeStr := r.URL.Query().Get("size")
+	if sizeStr != "" {
+		size, err = strconv.ParseInt(sizeStr, 10, 64)
+		if err != nil {
+			log.Warnf("%s %s 400 - Invalid size '%s': %s", r.Method, r.RequestURI, sizeStr, err)
+
+			w.WriteHeader(400)
+			fmt.Fprintf(w, "Bad request")
+			return
+		}
+	}
+
+	continuationToken := null.String{}
+
+	continuationTokenStr := r.URL.Query().Get("continuation_token")
+	if continuationTokenStr != "" {
+		continuationToken.Scan(continuationTokenStr)
+	}
+
 	profile, err := c.settingsService.GetProfile(profileID)
 	if err != nil {
 		log.Warnf("%s %s 404 - Can't load profile: %s", r.Method, r.RequestURI, err)
@@ -74,7 +96,7 @@ func (c *Controller) reqAPIV1GetProfileBucketObjects(w http.ResponseWriter, r *h
 		return
 	}
 
-	objects, err := c.s3Service.GetObjects(profile, bucketName)
+	objects, newContinuationToken, err := c.s3Service.GetObjects(profile, bucketName, continuationToken, size)
 	if err != nil {
 		log.Errorf("%s %s 500 - Can't load objects: %s", r.Method, r.RequestURI, err)
 
@@ -84,7 +106,8 @@ func (c *Controller) reqAPIV1GetProfileBucketObjects(w http.ResponseWriter, r *h
 	}
 
 	response := webapi.V1GetProfileBucketObjectsJSONResponseBody{
-		Objects: []webapi.ObjectV1{},
+		Objects:           []webapi.ObjectV1{},
+		ContinuationToken: newContinuationToken,
 	}
 
 	for _, object := range objects {

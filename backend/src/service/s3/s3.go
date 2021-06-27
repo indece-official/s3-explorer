@@ -26,6 +26,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/indece-official/go-gousu"
 	"github.com/indece-official/s3-explorer/backend/src/model"
+	"gopkg.in/guregu/null.v4"
 )
 
 // ServiceName defines the name of the s3 service
@@ -39,7 +40,7 @@ type IService interface {
 	AddBucket(profile *model.ProfileV1, bucket *model.BucketV1) error
 	DeleteBucket(profile *model.ProfileV1, bucketName string) error
 
-	GetObjects(profile *model.ProfileV1, bucket string) ([]*model.ObjectV1, error)
+	GetObjects(profile *model.ProfileV1, bucket string, continuationToken null.String, size int64) ([]*model.ObjectV1, string, error)
 	GetObject(profile *model.ProfileV1, bucket string, objectKey string) (*model.ObjectV1, error)
 	DownloadObject(profile *model.ProfileV1, bucket string, objectKey string, out io.Writer) error
 	DownloadObjectToFile(profile *model.ProfileV1, bucket string, objectKey string, filename string, progressClb ProgressCallback) error
