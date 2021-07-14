@@ -14,15 +14,26 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-package model
+package settings
 
-// BucketV1 represents a bucket in a S3 storage
-type BucketV1 struct {
-	Name string
-}
+import (
+	"testing"
 
-type BucketStatsV1 struct {
-	Size     int64
-	Files    int64
-	Complete bool
+	"github.com/indece-official/go-gousu"
+	"github.com/stretchr/testify/assert"
+)
+
+func TestEncryptDescript(t *testing.T) {
+	ctx := gousu.NewContext()
+	service := NewService(ctx).(*Service)
+
+	rawData := []byte("This is a test")
+
+	encData, err := service.encrypt(rawData, "abcdef123456")
+	assert.NoError(t, err)
+	assert.NotEmpty(t, encData)
+
+	decData, err := service.decrypt(encData, "abcdef123456")
+	assert.NoError(t, err)
+	assert.Equal(t, rawData, decData)
 }

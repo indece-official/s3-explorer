@@ -18,6 +18,7 @@ package ui
 
 import (
 	"fmt"
+	"path/filepath"
 	"sync"
 
 	"github.com/google/uuid"
@@ -42,7 +43,7 @@ func (c *Controller) downloadFile(profileID int64, bucketName string, objectKey 
 		return "", fmt.Errorf("Can't load object: %s", err)
 	}
 
-	filename, err := utils.SaveFile(c.view.Window(), object.Key)
+	filename, err := utils.SaveFile(c.view.Window(), filepath.Base(object.Key))
 	if err != nil {
 		return "", fmt.Errorf("Error opening Save-File-Dialog: %s", err)
 	}

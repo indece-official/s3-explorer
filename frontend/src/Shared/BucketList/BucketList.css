@@ -1,5 +1,20 @@
 /* http://paletton.com/#uid=33j0u0klllLaRwNgfqYqogPvKbo */
 
+.BucketList {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    height: 100%;
+}
+
+.BucketList-list {
+    flex-basis: 0;
+    flex-grow: 1;
+    flex-shrink: 1;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
 .BucketList-header {
     background: #D7B36A;
     color: #fff;
@@ -69,4 +84,30 @@
 
 .BucketList-bucket:hover .BucketList-bucket-actions {
     display: block;
+}
+
+.BucketList-currbucket {
+    height: 150px;
+}
+
+.BucketList-currbucket-header {
+    background: #D7B36A;
+    color: #fff;
+    font-weight: normal;
+    padding: 5px 10px;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    height: 28px;
+    box-sizing: border-box;
+}
+
+.BucketList-currbucket-name {
+    flex-shrink: 0;
+    flex-grow: 1;
+}
+
+.BucketList-currbucket-stats {
+    padding: 5px 10px;
+    font-size: 14px;
 }

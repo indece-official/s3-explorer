@@ -19,6 +19,7 @@ package web
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 	"strconv"
 
 	"github.com/go-chi/chi"
@@ -48,9 +49,18 @@ func (c *Controller) reqAPIV1DownloadProfileBucketObject(w http.ResponseWriter, 
 		return
 	}
 
-	objectKey := chi.URLParam(r, "objectKey")
-	if objectKey == "" {
-		log.Warnf("%s %s 400 - Invalid objectKey '%s': %s", r.Method, r.RequestURI, objectKey, err)
+	objectKeyRaw := chi.URLParam(r, "objectKey")
+	if objectKeyRaw == "" {
+		log.Warnf("%s %s 400 - Invalid objectKey '%s': %s", r.Method, r.RequestURI, objectKeyRaw, err)
+
+		w.WriteHeader(400)
+		fmt.Fprintf(w, "Bad request")
+		return
+	}
+
+	objectKey, err := url.QueryUnescape(objectKeyRaw)
+	if err != nil {
+		log.Warnf("%s %s 400 - Can't unescape objectKey: %s", r.Method, r.RequestURI, err)
 
 		w.WriteHeader(400)
 		fmt.Fprintf(w, "Bad request")

@@ -31,7 +31,7 @@ func profileV1ToAPIProfileV1(profile *model.ProfileV1) webapi.ProfileV1 {
 	apiProfile.Id = profile.ID
 	apiProfile.Name = profile.Name
 	apiProfile.AccessKey = profile.AccessKey
-	apiProfile.SecretKey = profile.SecretKey
+	apiProfile.SecretKey = "***"
 	apiProfile.Region = profile.Region
 	apiProfile.Endpoint = profile.Endpoint
 	apiProfile.Ssl = profile.SSL

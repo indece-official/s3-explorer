@@ -39,8 +39,6 @@ var (
 func main() {
 	utils.Init()
 
-	gousu.DisableLogger()
-
 	runner := gousu.NewRunner(ProjectName, fmt.Sprintf("%s (Build %s)", BuildVersion, BuildDate))
 
 	runner.CreateService(settings.NewService)

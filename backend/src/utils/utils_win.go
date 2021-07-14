@@ -71,6 +71,7 @@ import "C"
 
 import (
 	"fmt"
+	"github.com/indece-official/go-gousu"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -83,6 +84,8 @@ func Init() {
 	modshcore := syscall.NewLazyDLL("shcore.dll")
 	shc := modshcore.NewProc("SetProcessDpiAwareness")
 	shc.Call(uintptr(1))
+
+	gousu.DisableLogger()
 }
 
 // SetWindowsIcons sets the window's icon loading it from the compiled in resources

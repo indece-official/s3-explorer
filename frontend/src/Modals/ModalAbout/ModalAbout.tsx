@@ -26,7 +26,7 @@ export class ModalAbout extends React.Component<ModalAboutProps>
                 </div>
 
                 <div className='ModalAbout-text'>
-                    Copyright 2020 &copy; indece UG (haftungsbeschränkt)<br />
+                    Copyright 2021 &copy; indece UG (haftungsbeschränkt)<br />
                     <br />
                     <Link url='https://www.indece.com/software/s3-explorer' /><br />
                     <br />

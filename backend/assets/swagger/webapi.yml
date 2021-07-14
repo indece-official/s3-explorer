@@ -195,6 +195,45 @@ paths:
           description: Bad request
           content: {}
 
+  /v1/profile/{profileID}/bucket/{bucketName}/stats:
+    get:
+      tags:
+      - object
+      summary: Get stats for bucket for a profile
+      operationId: v1GetProfileBucketStats
+      parameters:
+      - name: profileID
+        in: path
+        description: ID of profile
+        required: true
+        example: 10
+        schema:
+          type: integer
+      - name: bucketName
+        in: path
+        description: Name of bucket
+        required: true
+        example: 'test-bucket'
+        schema:
+          type: string
+      - name: force
+        in: query
+        description: Force loading of total stats
+        required: false
+        schema:
+          type: boolean
+          default: false
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/v1GetProfileBucketStatsJSONResponseBody'
+        400:
+          description: Bad request
+          content: {}
+
   /v1/profile/{profileID}/bucket/{bucketName}/object:
     get:
       tags:
@@ -295,6 +334,28 @@ components:
           description: Name of bucket
           example: 'test-bucket'
 
+    BucketStatsV1:
+      type: object
+      required:
+      - 'files'
+      - 'size'
+      - 'complete'
+      properties:
+        files:
+          type: integer
+          format: int64
+          description: Number of files in bucket
+          example: 2478
+        size:
+          type: integer
+          format: int64
+          description: Total size of files in bucket (bytes)
+          example: 639468924
+        complete:
+          type: boolean
+          description: Loading the stats was successfully completed
+          example: true
+
     ObjectV1:
       type: object
       required:
@@ -352,6 +413,14 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/BucketV1'
+   
+    v1GetProfileBucketStatsJSONResponseBody:
+      type: object
+      required:
+      - 'stats'
+      properties:
+        stats:
+          $ref: '#/components/schemas/BucketStatsV1'
 
     v1GetProfileBucketObjectsJSONResponseBody:
       type: object

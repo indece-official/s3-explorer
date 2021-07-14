@@ -72,6 +72,7 @@ func (c *Controller) getRouter() chi.Router {
 	router.Post("/api/v1/profile/{profileID}/bucket", c.reqAPIV1AddProfileBucket)
 	router.Delete("/api/v1/profile/{profileID}/bucket/{bucketName}", c.reqAPIV1DeleteProfileBucket)
 
+	router.Get("/api/v1/profile/{profileID}/bucket/{bucketName}/stats", c.reqAPIV1GetProfileBucketStats)
 	router.Get("/api/v1/profile/{profileID}/bucket/{bucketName}/object", c.reqAPIV1GetProfileBucketObjects)
 	router.Post("/api/v1/profile/{profileID}/bucket/{bucketName}/object", c.reqAPIV1AddProfileBucketObject)
 	router.Get("/api/v1/profile/{profileID}/bucket/{bucketName}/object/{objectKey}", c.reqAPIV1DownloadProfileBucketObject)

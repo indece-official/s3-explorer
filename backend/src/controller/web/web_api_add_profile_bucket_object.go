@@ -59,6 +59,8 @@ func (c *Controller) reqAPIV1AddProfileBucketObject(w http.ResponseWriter, r *ht
 
 	r.ParseMultipartForm(10 * 1024 * 1024 * 1024 * 1024) // Max 10GB
 
+	filename := r.FormValue("filename")
+
 	file, handler, err := r.FormFile("file")
 	if err != nil {
 		log.Warnf("%s %s 400 - Can't load file: %s", r.Method, r.RequestURI, err)
@@ -69,7 +71,11 @@ func (c *Controller) reqAPIV1AddProfileBucketObject(w http.ResponseWriter, r *ht
 	}
 	defer file.Close()
 
-	err = c.s3Service.AddObject(profile, bucketName, handler.Filename, file)
+	if filename == "" {
+		filename = handler.Filename
+	}
+
+	err = c.s3Service.AddObject(profile, bucketName, filename, file)
 	if err != nil {
 		log.Errorf("%s %s 500 - Can't add bucket: %s", r.Method, r.RequestURI, err)
 

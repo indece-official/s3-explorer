@@ -32,7 +32,7 @@ import (
 // ServiceName defines the name of the settings service
 const ServiceName = "settings"
 
-var flagFilename = flag.String("settings_file", "~/.s3explorer/config", "")
+var flagFilename = flag.String("settings_file", "~/.s3explorer/config.enc", "")
 
 // IService defines the interface of the settings service
 type IService interface {
@@ -50,6 +50,8 @@ type Service struct {
 	log      *gousu.Log
 	filename string
 	profiles map[int64]*model.ProfileV1
+	loaded   bool
+	key      string
 }
 
 var _ IService = (*Service)(nil)
@@ -82,6 +84,11 @@ func (s *Service) store() error {
 		return fmt.Errorf("Can't encode settings: %s", err)
 	}
 
+	encryptedData, err := s.encrypt(settingsData, s.key)
+	if err != nil {
+		return fmt.Errorf("can't encrypt settings: %s", err)
+	}
+
 	// Make sure directory exists
 	path := filepath.Dir(s.filename)
 	err = os.MkdirAll(path, 0700)
@@ -89,7 +96,7 @@ func (s *Service) store() error {
 		return fmt.Errorf("Can't create directory '%s' for settings file: %s", path, err)
 	}
 
-	err = ioutil.WriteFile(s.filename, settingsData, 0600)
+	err = ioutil.WriteFile(s.filename, encryptedData, 0600)
 	if err != nil {
 		return fmt.Errorf("Can't write settings to '%s': %s", s.filename, err)
 	}
@@ -102,6 +109,57 @@ func (s *Service) Name() string {
 	return ServiceName
 }
 
+func (s *Service) load() error {
+	var err error
+
+	settings := &model.SettingsV1{
+		Profiles: []*model.ProfileV1{},
+	}
+
+	s.profiles = map[int64]*model.ProfileV1{}
+
+	encryptedData, err := ioutil.ReadFile(s.filename)
+	if err != nil {
+		if os.IsNotExist(err) {
+			s.loaded = true
+
+			return nil
+		}
+
+		return err
+	}
+
+	settingsData, err := s.decrypt(encryptedData, s.key)
+	if err != nil {
+		return fmt.Errorf("can't decrypt settings: %s", err)
+	}
+
+	err = json.Unmarshal(settingsData, settings)
+	if err != nil {
+		return fmt.Errorf("Can't decode settings from '%s': %s", s.filename, err)
+	}
+
+	for _, profile := range settings.Profiles {
+		s.profiles[profile.ID] = profile
+	}
+
+	s.loaded = true
+
+	return nil
+}
+
+func (s *Service) UpdateKey(newKey string) error {
+	s.key = newKey
+
+	return s.store()
+}
+
+func (s *Service) UseKey(key string) error {
+	s.key = key
+
+	return s.load()
+}
+
 // Start loads an existing settings file if it exists, else the settings are created
 // in memory an written to file later on the first change
 func (s *Service) Start() error {
@@ -112,26 +170,16 @@ func (s *Service) Start() error {
 		return fmt.Errorf("Can't settings file expand path (%s): %s", *flagFilename, err)
 	}
 
-	settings := &model.SettingsV1{
-		Profiles: []*model.ProfileV1{},
-	}
-
-	settingsData, err := ioutil.ReadFile(s.filename)
+	s.key, err = s.getDefaultKey()
 	if err != nil {
-		if os.IsNotExist(err) {
-			return nil
-		}
-	} else {
-		err := json.Unmarshal(settingsData, settings)
-		if err != nil {
-			return fmt.Errorf("Can't decode settings from '%s': %s", s.filename, err)
-		}
+		s.log.Errorf("can't get default key: %s", err)
 	}
 
-	s.profiles = map[int64]*model.ProfileV1{}
+	s.log.Infof("Loading file with key %s", s.key)
 
-	for _, profile := range settings.Profiles {
-		s.profiles[profile.ID] = profile
+	err = s.load()
+	if err != nil {
+		s.log.Errorf("can't load settings: %s", err)
 	}
 
 	return nil

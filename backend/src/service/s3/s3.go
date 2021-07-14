@@ -39,6 +39,7 @@ type IService interface {
 	GetBuckets(profile *model.ProfileV1) ([]*model.BucketV1, error)
 	AddBucket(profile *model.ProfileV1, bucket *model.BucketV1) error
 	DeleteBucket(profile *model.ProfileV1, bucketName string) error
+	GetBucketStats(profile *model.ProfileV1, bucket string, force bool) (*model.BucketStatsV1, error)
 
 	GetObjects(profile *model.ProfileV1, bucket string, continuationToken null.String, size int64) ([]*model.ObjectV1, string, error)
 	GetObject(profile *model.ProfileV1, bucket string, objectKey string) (*model.ObjectV1, error)

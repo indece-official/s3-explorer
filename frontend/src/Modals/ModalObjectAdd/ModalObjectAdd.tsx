@@ -6,6 +6,7 @@ import { InputFile } from '../../Shared/Input/InputFile';
 import { ProgressBar } from '../../Shared/ProgressBar/ProgressBar';
 
 import './ModalObjectAdd.css';
+import { InputText } from '../../Shared/Input/InputText';
 
 
 export interface ModalObjectAddProps
@@ -21,13 +22,15 @@ export interface ModalObjectAddProps
 
 interface ModalObjectAddFormData
 {
-    files:       FileList | null;
+    files:      FileList | null;
+    filename:   string;
 }
 
 
 interface ModalObjectAddFormErrors
 {
-    files?:      string;
+    files?:     string;
+    filename?:  string;
 }
 
 
@@ -51,7 +54,8 @@ export class ModalObjectAdd extends React.Component<ModalObjectAddProps, ModalOb
 
         this.state = {
             form: {
-                files:      null
+                files:      null,
+                filename:   ''
             },
             formErrors:     {},
             loading:        false,
@@ -109,6 +113,15 @@ export class ModalObjectAdd extends React.Component<ModalObjectAddProps, ModalOb
             ...this.state.form,
             [name]: value
         };
+
+        console.log(name, value);
+
+        if ( name === 'files' )
+        {
+            form.filename = value.length === 1 ? value[0].name : '';
+        }
+
+        console.log(form);
 
         if ( this._checkForm(form) )
         {
@@ -168,6 +181,7 @@ export class ModalObjectAdd extends React.Component<ModalObjectAddProps, ModalOb
                     this.props.profileID,
                     this.props.bucketName,
                     file,
+                    this.state.form.filename || null,
                     this._onProgress
                 );
             }
@@ -215,6 +229,16 @@ export class ModalObjectAdd extends React.Component<ModalObjectAddProps, ModalOb
                             error={this.state.formErrors.files}
                             onChange={this._onInputChange}
                         />
+                        
+                        {this.state.form.files && this.state.form.files.length === 1 ?
+                            <InputText
+                                label='Filename'
+                                name='filename'
+                                value={this.state.form.filename}
+                                error={this.state.formErrors.filename}
+                                onChange={this._onInputChange}
+                            />
+                        : null}
                     </div>
                     
                     <div className='ModalObjectAdd-actions'>

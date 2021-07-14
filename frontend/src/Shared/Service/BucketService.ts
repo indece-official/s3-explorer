@@ -14,6 +14,14 @@ export interface AddBucketV1Data
 }
 
 
+export interface BucketStatsV1
+{
+    files:      number;
+    size:       number;
+    complete:   boolean;
+}
+
+
 export class S3BucketService
 {
     private static _instance: S3BucketService;
@@ -60,6 +68,22 @@ export class S3BucketService
         );
 
         return resp.buckets;
+    }
+  
+  
+    public async getBucketStats ( profileID: number, bucketName: string, force: boolean ): Promise<BucketStatsV1>
+    {
+        const resp = await this._backendService.fetchJson(
+            `/api/v1/profile/${encodeURIComponent(profileID)}/bucket/${encodeURIComponent(bucketName)}/stats?force=${encodeURIComponent(force)}`,
+            {
+                method:     'GET',
+                headers:    {
+                    'Accept':       'application/json'
+                }
+            }
+        );
+
+        return resp.stats;
     }
 
 

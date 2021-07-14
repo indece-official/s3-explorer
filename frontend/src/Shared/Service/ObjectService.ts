@@ -68,11 +68,15 @@ export class S3ObjectService
     }
 
 
-    public async addObject ( profileID: number, bucketName: string, file: File, onProgress?: ( evt: any ) => any ): Promise<void>
+    public async addObject ( profileID: number, bucketName: string, file: File, filename: string | null, onProgress?: ( evt: any ) => any ): Promise<void>
     {
         const formData = new FormData();
 
         formData.set('file', file);
+        if ( filename )
+        {
+            formData.set('filename', filename);
+        }
 
         await this._backendService.uploadFile(
             `/api/v1/profile/${encodeURIComponent(profileID)}/bucket/${encodeURIComponent(bucketName)}/object`,

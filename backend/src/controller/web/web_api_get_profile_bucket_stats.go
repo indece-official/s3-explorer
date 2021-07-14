@@ -17,15 +17,29 @@
 package web
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/url"
 	"strconv"
+
+	"github.com/indece-official/s3-explorer/backend/src/generated/model/webapi"
+	"github.com/indece-official/s3-explorer/backend/src/model"
 
 	"github.com/go-chi/chi"
 )
 
-func (c *Controller) reqAPIV1DeleteProfileBucketObject(w http.ResponseWriter, r *http.Request) {
+func bucketStatsV1ToAPIBucketStatsV1(bucketStats *model.BucketStatsV1) webapi.BucketStatsV1 {
+	apiBucketStats := webapi.BucketStatsV1{}
+
+	apiBucketStats.Files = bucketStats.Files
+	apiBucketStats.Size = bucketStats.Size
+	apiBucketStats.Complete = bucketStats.Complete
+
+	return apiBucketStats
+
+}
+
+func (c *Controller) reqAPIV1GetProfileBucketStats(w http.ResponseWriter, r *http.Request) {
 	var err error
 
 	log := c.log
@@ -49,25 +63,19 @@ func (c *Controller) reqAPIV1DeleteProfileBucketObject(w http.ResponseWriter, r 
 		return
 	}
 
-	objectKeyRaw := chi.URLParam(r, "objectKey")
-	if objectKeyRaw == "" {
-		log.Warnf("%s %s 400 - Invalid objectKey '%s': %s", r.Method, r.RequestURI, objectKeyRaw, err)
+	force := false
 
-		w.WriteHeader(400)
-		fmt.Fprintf(w, "Bad request")
-		return
+	forceStr := r.URL.Query().Get("force")
+	if forceStr != "" {
+		force, err = strconv.ParseBool(forceStr)
+		if err != nil {
+			log.Warnf("%s %s 400 - Invalid force '%s': %s", r.Method, r.RequestURI, forceStr, err)
+
+			w.WriteHeader(400)
+			fmt.Fprintf(w, "Bad request")
+			return
+		}
 	}
-
-	objectKey, err := url.QueryUnescape(objectKeyRaw)
-	if err != nil {
-		log.Warnf("%s %s 400 - Can't unescape objectKey: %s", r.Method, r.RequestURI, err)
-
-		w.WriteHeader(400)
-		fmt.Fprintf(w, "Bad request")
-		return
-	}
-
-	log.Infof("Object: %s", objectKey)
 
 	profile, err := c.settingsService.GetProfile(profileID)
 	if err != nil {
@@ -78,17 +86,30 @@ func (c *Controller) reqAPIV1DeleteProfileBucketObject(w http.ResponseWriter, r 
 		return
 	}
 
-	err = c.s3Service.DeleteObject(profile, bucketName, objectKey)
+	stats, err := c.s3Service.GetBucketStats(profile, bucketName, force)
 	if err != nil {
-		log.Errorf("%s %s 500 - Can't delete object: %s", r.Method, r.RequestURI, err)
+		log.Errorf("%s %s 500 - Can't load bucket stats: %s", r.Method, r.RequestURI, err)
 
 		w.WriteHeader(500)
 		fmt.Fprintf(w, "S3 Error: %s", err)
 		return
 	}
 
-	log.Infof("%s %s 200 - Deleted object", r.Method, r.RequestURI)
+	response := webapi.V1GetProfileBucketStatsJSONResponseBody{
+		Stats: bucketStatsV1ToAPIBucketStatsV1(stats),
+	}
+
+	responseJSON, err := json.Marshal(response)
+	if err != nil {
+		log.Errorf("%s %s 500 - JSON-encoding response failed: %s", r.Method, r.RequestURI, err)
+
+		w.WriteHeader(500)
+		fmt.Fprintf(w, "Internal server error")
+		return
+	}
+
+	log.Infof("%s %s 200 - Loaded stats", r.Method, r.RequestURI)
 
 	w.Header().Add("Content-Type", "application/json")
-	fmt.Fprintf(w, "{}")
+	w.Write(responseJSON)
 }
