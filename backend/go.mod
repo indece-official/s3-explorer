@@ -3,16 +3,14 @@ module github.com/indece-official/s3-explorer/backend
 go 1.14
 
 require (
-	github.com/aws/aws-sdk-go v1.33.5
+	github.com/aws/aws-sdk-go v1.34.0
 	github.com/go-chi/chi v4.1.2+incompatible
 	github.com/google/uuid v1.1.1
 	github.com/indece-official/go-gousu v1.1.0
 	github.com/namsral/flag v1.7.4-pre
-	github.com/shurcooL/httpfs v0.0.0-20190707220628-8d4bc4ba7749 // indirect
-	github.com/shurcooL/vfsgen v0.0.0-20200627165143-92b8a710ab6c // indirect
-	github.com/stretchr/testify v1.7.0 // indirect
+	github.com/stretchr/testify v1.7.0
 	github.com/zserge/webview v0.0.0-20200712140540-e08a32b4ebab
-	golang.org/x/sys v0.0.0-20210630005230-0f9fa26af87c // indirect
-	golang.org/x/tools v0.0.0-20200723165920-188b38280e32 // indirect
-	gopkg.in/guregu/null.v4 v4.0.0 // indirect
+	golang.org/x/net v0.0.0-20200625001655-4c5254603344 // indirect
+	golang.org/x/sys v0.0.0-20210630005230-0f9fa26af87c
+	gopkg.in/guregu/null.v4 v4.0.0
 )
