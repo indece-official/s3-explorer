@@ -17,78 +17,41 @@
 package web
 
 import (
-	"encoding/json"
-	"fmt"
 	"net/http"
-	"strconv"
 
+	"github.com/indece-official/go-gousu/gousuchi/v2"
 	"github.com/indece-official/s3-explorer/backend/src/generated/model/webapi"
-	"github.com/indece-official/s3-explorer/backend/src/model"
-
-	"github.com/go-chi/chi"
 )
 
-func bucketV1ToAPIBucketV1(bucket *model.BucketV1) webapi.BucketV1 {
-	apiBucket := webapi.BucketV1{}
+func (c *Controller) reqAPIV1GetProfileBuckets(w http.ResponseWriter, r *http.Request) gousuchi.IResponse {
+	errResp := c.checkAuth(r)
+	if errResp != nil {
+		return errResp
+	}
 
-	apiBucket.Name = bucket.Name
-
-	return apiBucket
-
-}
-
-func (c *Controller) reqAPIV1GetProfileBuckets(w http.ResponseWriter, r *http.Request) {
-	var err error
-
-	log := c.log
-
-	profileIDStr := chi.URLParam(r, "profileID")
-	profileID, err := strconv.ParseInt(profileIDStr, 10, 64)
-	if err != nil {
-		log.Warnf("%s %s 400 - Invalid profileID '%s': %s", r.Method, r.RequestURI, profileIDStr, err)
-
-		w.WriteHeader(400)
-		fmt.Fprintf(w, "Bad request")
-		return
+	profileID, errResp := gousuchi.URLParamInt64(r, "profileID")
+	if errResp != nil {
+		return errResp
 	}
 
 	profile, err := c.settingsService.GetProfile(profileID)
 	if err != nil {
-		log.Warnf("%s %s 404 - Can't load profile: %s", r.Method, r.RequestURI, err)
-
-		w.WriteHeader(404)
-		fmt.Fprintf(w, "Profile not found")
-		return
+		return gousuchi.NotFound(r, "Can't load profile: %s", err)
 	}
 
 	buckets, err := c.s3Service.GetBuckets(profile)
 	if err != nil {
-		log.Errorf("%s %s 500 - Can't load buckets: %s", r.Method, r.RequestURI, err)
-
-		w.WriteHeader(500)
-		fmt.Fprintf(w, "S3 Error: %s", err)
-		return
+		return gousuchi.InternalServerError(r, "Can't load buckets: %s", err)
 	}
 
-	response := webapi.V1GetProfileBucketsJSONResponseBody{
+	respData := webapi.V1GetProfileBucketsJSONResponseBody{
 		Buckets: []webapi.BucketV1{},
 	}
 
 	for _, bucket := range buckets {
-		response.Buckets = append(response.Buckets, bucketV1ToAPIBucketV1(bucket))
+		respData.Buckets = append(respData.Buckets, c.mapBucketV1ToAPIBucketV1(bucket))
 	}
 
-	responseJSON, err := json.Marshal(response)
-	if err != nil {
-		log.Errorf("%s %s 500 - JSON-encoding response failed: %s", r.Method, r.RequestURI, err)
-
-		w.WriteHeader(500)
-		fmt.Fprintf(w, "Internal server error")
-		return
-	}
-
-	log.Infof("%s %s 200 - Loaded %d buckets", r.Method, r.RequestURI, len(response.Buckets))
-
-	w.Header().Add("Content-Type", "application/json")
-	w.Write(responseJSON)
+	return gousuchi.JSON(r, respData).
+		WithDetailedMessage("Loaded %d buckets", len(respData.Buckets))
 }

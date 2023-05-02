@@ -17,44 +17,30 @@
 package web
 
 import (
-	"fmt"
 	"net/http"
-	"strconv"
 
-	"github.com/go-chi/chi"
+	"github.com/indece-official/go-gousu/gousuchi/v2"
 )
 
-func (c *Controller) reqAPIV1AddProfileBucketObject(w http.ResponseWriter, r *http.Request) {
-	var err error
-
-	log := c.log
-
-	profileIDStr := chi.URLParam(r, "profileID")
-	profileID, err := strconv.ParseInt(profileIDStr, 10, 64)
-	if err != nil {
-		log.Warnf("%s %s 400 - Invalid profileID '%s': %s", r.Method, r.RequestURI, profileIDStr, err)
-
-		w.WriteHeader(400)
-		fmt.Fprintf(w, "Bad request")
-		return
+func (c *Controller) reqAPIV1AddProfileBucketObject(w http.ResponseWriter, r *http.Request) gousuchi.IResponse {
+	errResp := c.checkAuth(r)
+	if errResp != nil {
+		return errResp
 	}
 
-	bucketName := chi.URLParam(r, "bucketName")
-	if bucketName == "" {
-		log.Warnf("%s %s 400 - Invalid bucketName '%s': %s", r.Method, r.RequestURI, bucketName, err)
+	profileID, errResp := gousuchi.URLParamInt64(r, "profileID")
+	if errResp != nil {
+		return errResp
+	}
 
-		w.WriteHeader(400)
-		fmt.Fprintf(w, "Bad request")
-		return
+	bucketName, errResp := gousuchi.URLParamString(r, "bucketName")
+	if errResp != nil {
+		return errResp
 	}
 
 	profile, err := c.settingsService.GetProfile(profileID)
 	if err != nil {
-		log.Warnf("%s %s 404 - Can't load profile: %s", r.Method, r.RequestURI, err)
-
-		w.WriteHeader(404)
-		fmt.Fprintf(w, "Profile not found")
-		return
+		return gousuchi.NotFound(r, "Can't load profile: %s", err)
 	}
 
 	r.ParseMultipartForm(10 * 1024 * 1024 * 1024 * 1024) // Max 10GB
@@ -63,11 +49,7 @@ func (c *Controller) reqAPIV1AddProfileBucketObject(w http.ResponseWriter, r *ht
 
 	file, handler, err := r.FormFile("file")
 	if err != nil {
-		log.Warnf("%s %s 400 - Can't load file: %s", r.Method, r.RequestURI, err)
-
-		w.WriteHeader(400)
-		fmt.Fprintf(w, "Bad request")
-		return
+		return gousuchi.BadRequest(r, "Can't load file: %s", err)
 	}
 	defer file.Close()
 
@@ -77,16 +59,10 @@ func (c *Controller) reqAPIV1AddProfileBucketObject(w http.ResponseWriter, r *ht
 
 	err = c.s3Service.AddObject(profile, bucketName, filename, file)
 	if err != nil {
-		log.Errorf("%s %s 500 - Can't add bucket: %s", r.Method, r.RequestURI, err)
-
-		w.WriteHeader(500)
-		fmt.Fprintf(w, "S3 Error: %s", err)
-		return
+		return gousuchi.InternalServerError(r, "Can't add bucket: %s", err)
 	}
 
-	log.Infof("%s %s 201 - Created object '%s'", r.Method, r.RequestURI, handler.Filename)
-
-	w.Header().Add("Content-Type", "application/json")
-	w.WriteHeader(201)
-	fmt.Fprintf(w, "{}")
+	return gousuchi.JSON(r, map[string]interface{}{}).
+		WithStatusCode(http.StatusCreated).
+		WithDetailedMessage("Created object '%s'", handler.Filename)
 }

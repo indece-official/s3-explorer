@@ -98,8 +98,6 @@ paths:
               type: object
               required:
               - name
-              - access_key
-              - secret_key
               - region
               - endpoint
               - ssl

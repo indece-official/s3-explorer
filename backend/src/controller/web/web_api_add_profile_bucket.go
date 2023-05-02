@@ -18,71 +18,43 @@ package web
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
-	"strconv"
 
-	"github.com/indece-official/go-gousu"
+	"github.com/indece-official/go-gousu/gousuchi/v2"
+	"github.com/indece-official/go-gousu/v2/gousu"
 	"github.com/indece-official/s3-explorer/backend/src/generated/model/webapi"
-	"github.com/indece-official/s3-explorer/backend/src/model"
-
-	"github.com/go-chi/chi"
 )
 
-func v1AddProfileBucketJSONRequestBodyToProfileV1(requestBody *webapi.V1AddProfileBucketJSONRequestBody) *model.BucketV1 {
-	bucket := &model.BucketV1{}
+func (c *Controller) reqAPIV1AddProfileBucket(w http.ResponseWriter, r *http.Request) gousuchi.IResponse {
+	errResp := c.checkAuth(r)
+	if errResp != nil {
+		return errResp
+	}
 
-	bucket.Name = requestBody.Name
-
-	return bucket
-
-}
-
-func (c *Controller) reqAPIV1AddProfileBucket(w http.ResponseWriter, r *http.Request) {
-	var err error
-
-	log := c.log
-
-	profileIDStr := chi.URLParam(r, "profileID")
-	profileID, err := strconv.ParseInt(profileIDStr, 10, 64)
-	if err != nil {
-		log.Warnf("%s %s 400 - Invalid profileID '%s': %s", r.Method, r.RequestURI, profileIDStr, err)
-
-		w.WriteHeader(400)
-		fmt.Fprintf(w, "Bad request")
-		return
+	profileID, errResp := gousuchi.URLParamInt64(r, "profileID")
+	if errResp != nil {
+		return errResp
 	}
 
 	requestBody := &webapi.V1AddProfileBucketJSONRequestBody{}
 
 	decoder := json.NewDecoder(r.Body)
-	err = decoder.Decode(requestBody)
+	err := decoder.Decode(requestBody)
 	if err != nil {
-		log.Warnf("%s %s 400 - Decoding JSON request body failed: %s", r.Method, r.RequestURI, err)
-
-		w.WriteHeader(400)
-		fmt.Fprintf(w, "Decoding request body failed")
-		return
+		return gousuchi.BadRequest(r, "Decoding JSON request body failed: %s", err)
 	}
 
 	profile, err := c.settingsService.GetProfile(profileID)
 	if err != nil {
-		log.Warnf("%s %s 404 - Can't load profile: %s", r.Method, r.RequestURI, err)
-
-		w.WriteHeader(404)
-		fmt.Fprintf(w, "Profile not found")
-		return
+		return gousuchi.NotFound(r, "Can't load profile: %s", err)
 	}
 
-	bucket := v1AddProfileBucketJSONRequestBodyToProfileV1(requestBody)
+	bucket := c.mapV1AddProfileBucketJSONRequestBodyToProfileV1(requestBody)
 
 	err = c.s3Service.AddBucket(profile, bucket)
 	if err != nil {
-		log.Errorf("%s %s 500 - Can't add bucket: %s", r.Method, r.RequestURI, err)
+		return gousuchi.InternalServerError(r, "Can't add bucket: %s", err)
 
-		w.WriteHeader(500)
-		fmt.Fprintf(w, "S3 Error: %s", err)
-		return
 	}
 
 	if len(profile.Buckets) > 0 && !gousu.ContainsString(profile.Buckets, bucket.Name) {
@@ -90,17 +62,11 @@ func (c *Controller) reqAPIV1AddProfileBucket(w http.ResponseWriter, r *http.Req
 
 		err = c.settingsService.UpdateProfile(profile)
 		if err != nil {
-			log.Errorf("%s %s 500 - Can't update profile: %s", r.Method, r.RequestURI, err)
-
-			w.WriteHeader(500)
-			fmt.Fprintf(w, "Internal server error")
-			return
+			return gousuchi.InternalServerError(r, "Can't update profile: %s", err)
 		}
 	}
 
-	log.Infof("%s %s 201 - Created bucket '%s'", r.Method, r.RequestURI, bucket.Name)
-
-	w.Header().Add("Content-Type", "application/json")
-	w.WriteHeader(201)
-	fmt.Fprintf(w, "{}")
+	return gousuchi.JSON(r, map[string]interface{}{}).
+		WithStatusCode(http.StatusCreated).
+		WithDetailedMessage("Created bucket '%s'", bucket.Name)
 }

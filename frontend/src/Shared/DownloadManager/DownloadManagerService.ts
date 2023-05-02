@@ -1,4 +1,4 @@
-import { Subject } from "../Subject";
+import { Subject } from 'ts-subject';
 import { S3ObjectService } from "../Service/ObjectService";
 
 export interface DownloadStatus

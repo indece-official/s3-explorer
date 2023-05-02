@@ -24,7 +24,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"github.com/indece-official/go-gousu"
+	"github.com/indece-official/go-gousu/v2/gousu"
+	"github.com/indece-official/go-gousu/v2/gousu/logger"
 	"github.com/indece-official/s3-explorer/backend/src/model"
 	"gopkg.in/guregu/null.v4"
 )
@@ -51,7 +52,7 @@ type IService interface {
 
 // Service is the service used to access the s3 storage server
 type Service struct {
-	log *gousu.Log
+	log *logger.Log
 }
 
 var _ IService = (*Service)(nil)
@@ -106,7 +107,7 @@ func (s *Service) Stop() error {
 // NewService creates a new instance of s3 service
 func NewService(ctx gousu.IContext) gousu.IService {
 	return &Service{
-		log: gousu.GetLogger(fmt.Sprintf("service.%s", ServiceName)),
+		log: logger.GetLogger(fmt.Sprintf("service.%s", ServiceName)),
 	}
 }
 

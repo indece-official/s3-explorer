@@ -1,9 +1,10 @@
-import { futch } from "./futch";
+import { futch } from './futch';
+
 
 export enum BackendMethod
 {
-    GET = 'GET',
-    POST = 'POST'
+    GET     = 'GET',
+    POST    = 'POST'
 }
 
 
@@ -23,8 +24,26 @@ export class BackendService
     }
 
 
+    private async getSessionToken ( ): Promise<string>
+    {
+        if ( typeof((window as any).s3SessionToken) !== 'function' )
+        {
+            return '';
+        }
+
+        return await (window as any).s3SessionToken();
+    }
+
+
     public async fetchJson ( input: RequestInfo, init?: RequestInit ): Promise<any>
     {
+        init = init || {};
+
+        init.headers = {
+            Authorization: `Bearer ${await this.getSessionToken()}`,
+            ...(init.headers || {})
+        };
+
         const resp = await fetch(input, {
             credentials: 'include',
             ...init
@@ -51,6 +70,13 @@ export class BackendService
                               init: RequestInit,
                               onProgress?: ( evt: any ) => any ): Promise<any>
     {
+        init = init || {};
+
+        init.headers = {
+            Authorization: `Bearer ${await this.getSessionToken()}`,
+            ...(init.headers || {})
+        };
+
         const resp = await futch(path, {
             ...init
         }, onProgress);

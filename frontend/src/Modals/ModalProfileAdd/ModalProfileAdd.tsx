@@ -178,29 +178,35 @@ export class ModalProfileAdd extends React.Component<ModalProfileAddProps, Modal
 
         try
         {
-            const data = {
-                name:       this.state.form.name,
-                access_key: this.state.form.access_key,
-                secret_key: this.state.form.secret_key,
-                region:     this.state.form.region,
-                endpoint:   this.state.form.endpoint,
-                ssl:        this.state.form.ssl,
-                path_style: this.state.form.path_style,
-                buckets:    this.state.form.buckets.filter( bucket => !!bucket )
-            };
-
-            
             let profileID = 0;
             
             if ( this.state.editMode )
             {
-                await this._s3ProfileService.updateProfile(this.props.profile!.id, data);
+                await this._s3ProfileService.updateProfile(this.props.profile!.id, {
+                    name:       this.state.form.name.trim(),
+                    access_key: (this.props.profile && this.state.form.access_key.trim() === this.props.profile.access_key.trim()) ? null : this.state.form.access_key.trim(),
+                    secret_key: (this.props.profile && this.state.form.secret_key.trim() === this.props.profile.secret_key.trim()) ? null : this.state.form.secret_key.trim(),
+                    region:     this.state.form.region.trim(),
+                    endpoint:   this.state.form.endpoint.trim(),
+                    ssl:        this.state.form.ssl,
+                    path_style: this.state.form.path_style,
+                    buckets:    this.state.form.buckets.filter( bucket => !!bucket ).map( bucket => bucket.trim() )
+                });
 
                 profileID = this.props.profile!.id;
             }
             else
             {
-                profileID = await this._s3ProfileService.addProfile(data);
+                profileID = await this._s3ProfileService.addProfile({
+                    name:       this.state.form.name.trim(),
+                    access_key: this.state.form.access_key.trim(),
+                    secret_key: this.state.form.secret_key.trim(),
+                    region:     this.state.form.region.trim(),
+                    endpoint:   this.state.form.endpoint.trim(),
+                    ssl:        this.state.form.ssl,
+                    path_style: this.state.form.path_style,
+                    buckets:    this.state.form.buckets.filter( bucket => !!bucket ).map( bucket => bucket.trim() )
+                });
             }
 
             this.setState({
@@ -214,13 +220,13 @@ export class ModalProfileAdd extends React.Component<ModalProfileAddProps, Modal
         }
         catch ( err )
         {
-            console.error(`Error adding profile: ${err.message}`, err);
+            console.error(`Error adding profile: ${(err as Error).message}`, err);
         
             this.setState({
                 loading:    false
             });
 
-            this.props.onError(err);
+            this.props.onError(err as Error);
         }
     }
 

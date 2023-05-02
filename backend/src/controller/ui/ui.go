@@ -21,11 +21,13 @@ import (
 	"os"
 	"time"
 
-	"github.com/zserge/webview"
+	"github.com/webview/webview"
 
-	"github.com/indece-official/go-gousu"
+	"github.com/indece-official/go-gousu/v2/gousu"
+	"github.com/indece-official/go-gousu/v2/gousu/logger"
 	"github.com/indece-official/s3-explorer/backend/src/controller/web"
 	"github.com/indece-official/s3-explorer/backend/src/service/s3"
+	"github.com/indece-official/s3-explorer/backend/src/service/session"
 	"github.com/indece-official/s3-explorer/backend/src/service/settings"
 	"github.com/indece-official/s3-explorer/backend/src/utils"
 	"github.com/namsral/flag"
@@ -55,8 +57,9 @@ type IController interface {
 
 // Controller is the core controller running the ui
 type Controller struct {
-	log             *gousu.Log
+	log             *logger.Log
 	s3Service       s3.IService
+	sessionService  session.IService
 	settingsService settings.IService
 	view            webview.WebView
 	downloads       map[string]*DownloadStatus
@@ -79,6 +82,7 @@ func (c *Controller) Start() error {
 	c.view.SetSize(800, 600, webview.HintNone)
 	c.view.Bind("s3DownloadFile", c.downloadFile)
 	c.view.Bind("s3DownloadStatus", c.getDownloadStatus)
+	c.view.Bind("s3SessionToken", c.getSessionToken)
 	c.view.Bind("systemOpenLink", c.systemOpenLink)
 	c.view.Bind("showLicense", c.showLicense)
 	c.view.Navigate(fmt.Sprintf("http://127.0.0.1:%d/index.html", *web.ServerPort))
@@ -111,8 +115,9 @@ func (c *Controller) Stop() error {
 // NewController creates a new instance of the ui controller
 func NewController(ctx gousu.IContext) gousu.IUIController {
 	return &Controller{
-		log:             gousu.GetLogger(fmt.Sprintf("controller.%s", ControllerName)),
+		log:             logger.GetLogger(fmt.Sprintf("controller.%s", ControllerName)),
 		s3Service:       ctx.GetService(s3.ServiceName).(s3.IService),
+		sessionService:  ctx.GetService(session.ServiceName).(session.IService),
 		settingsService: ctx.GetService(settings.ServiceName).(settings.IService),
 	}
 }

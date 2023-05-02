@@ -1,5 +1,5 @@
 # S3 Explorer
-# Copyright (C) 2020  indece UG (haftungsbeschränkt)
+# Copyright (C) 2022  indece UG (haftungsbeschränkt)
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by

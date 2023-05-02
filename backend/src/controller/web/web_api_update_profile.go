@@ -18,72 +18,43 @@ package web
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
-	"strconv"
 
-	"github.com/go-chi/chi"
+	"github.com/indece-official/go-gousu/gousuchi/v2"
 	"github.com/indece-official/s3-explorer/backend/src/generated/model/webapi"
-	"github.com/indece-official/s3-explorer/backend/src/model"
 )
 
-func v1UpdateProfileJSONRequestBodyToProfileV1(profileID int64, requestBody *webapi.V1UpdateProfileJSONRequestBody) *model.ProfileV1 {
-	profile := &model.ProfileV1{}
-
-	profile.ID = profileID
-	profile.Name = requestBody.Name
-	profile.AccessKey = requestBody.AccessKey
-	profile.SecretKey = requestBody.SecretKey
-	profile.Region = requestBody.Region
-	profile.Endpoint = requestBody.Endpoint
-	profile.SSL = requestBody.Ssl
-	profile.PathStyle = requestBody.PathStyle
-	profile.Buckets = requestBody.Buckets
-
-	return profile
-
-}
-
-func (c *Controller) reqAPIV1UpdateProfile(w http.ResponseWriter, r *http.Request) {
-	var err error
-
-	log := c.log
+func (c *Controller) reqAPIV1UpdateProfile(w http.ResponseWriter, r *http.Request) gousuchi.IResponse {
+	errResp := c.checkAuth(r)
+	if errResp != nil {
+		return errResp
+	}
 
 	requestBody := &webapi.V1UpdateProfileJSONRequestBody{}
 
-	profileIDStr := chi.URLParam(r, "profileID")
-	profileID, err := strconv.ParseInt(profileIDStr, 10, 64)
-	if err != nil {
-		log.Warnf("%s %s 400 - Invalid profileID '%s': %s", r.Method, r.RequestURI, profileIDStr, err)
-
-		w.WriteHeader(400)
-		fmt.Fprintf(w, "Bad request")
-		return
+	profileID, errResp := gousuchi.URLParamInt64(r, "profileID")
+	if errResp != nil {
+		return errResp
 	}
 
 	decoder := json.NewDecoder(r.Body)
-	err = decoder.Decode(requestBody)
+	err := decoder.Decode(requestBody)
 	if err != nil {
-		log.Warnf("%s %s 400 - Decoding JSON request body failed: %s", r.Method, r.RequestURI, err)
-
-		w.WriteHeader(400)
-		fmt.Fprintf(w, "Decoding request body failed")
-		return
+		return gousuchi.BadRequest(r, "Decoding JSON request body failed: %s", err)
 	}
 
-	profile := v1UpdateProfileJSONRequestBodyToProfileV1(profileID, requestBody)
+	oldProfile, err := c.settingsService.GetProfile(profileID)
+	if err != nil {
+		return gousuchi.NotFound(r, "Can't load profile: %s", err)
+	}
+
+	profile := c.mapV1UpdateProfileJSONRequestBodyToProfileV1(requestBody, oldProfile)
 
 	err = c.settingsService.UpdateProfile(profile)
 	if err != nil {
-		log.Errorf("%s %s 500 - Can't update profile: %s", r.Method, r.RequestURI, err)
-
-		w.WriteHeader(500)
-		fmt.Fprintf(w, "Internal server error")
-		return
+		return gousuchi.InternalServerError(r, "Can't update profile: %s", err)
 	}
 
-	log.Infof("%s %s 201 - Updated profile %d", r.Method, r.RequestURI, profileID)
-
-	w.Header().Add("Content-Type", "application/json")
-	fmt.Fprintf(w, "{}")
+	return gousuchi.JSON(r, map[string]interface{}{}).
+		WithDetailedMessage("Updated profile %d", profileID)
 }

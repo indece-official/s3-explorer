@@ -17,64 +17,31 @@
 package web
 
 import (
-	"encoding/json"
-	"fmt"
 	"net/http"
 
+	"github.com/indece-official/go-gousu/gousuchi/v2"
 	"github.com/indece-official/s3-explorer/backend/src/generated/model/webapi"
-	"github.com/indece-official/s3-explorer/backend/src/model"
 )
 
-func profileV1ToAPIProfileV1(profile *model.ProfileV1) webapi.ProfileV1 {
-	apiProfile := webapi.ProfileV1{}
-
-	apiProfile.Id = profile.ID
-	apiProfile.Name = profile.Name
-	apiProfile.AccessKey = profile.AccessKey
-	apiProfile.SecretKey = "***"
-	apiProfile.Region = profile.Region
-	apiProfile.Endpoint = profile.Endpoint
-	apiProfile.Ssl = profile.SSL
-	apiProfile.PathStyle = profile.PathStyle
-	apiProfile.Buckets = profile.Buckets
-
-	return apiProfile
-
-}
-
-func (c *Controller) reqAPIV1GetProfiles(w http.ResponseWriter, r *http.Request) {
-	var err error
-
-	log := c.log
+func (c *Controller) reqAPIV1GetProfiles(w http.ResponseWriter, r *http.Request) gousuchi.IResponse {
+	errResp := c.checkAuth(r)
+	if errResp != nil {
+		return errResp
+	}
 
 	profiles, err := c.settingsService.GetProfiles()
 	if err != nil {
-		log.Errorf("%s %s 500 - Can't load profiles: %s", r.Method, r.RequestURI, err)
-
-		w.WriteHeader(500)
-		fmt.Fprintf(w, "Internal server error")
-		return
+		return gousuchi.InternalServerError(r, "Can't load profiles: %s", err)
 	}
 
-	response := webapi.V1GetProfilesJSONResponseBody{
+	respData := webapi.V1GetProfilesJSONResponseBody{
 		Profiles: []webapi.ProfileV1{},
 	}
 
 	for _, profile := range profiles {
-		response.Profiles = append(response.Profiles, profileV1ToAPIProfileV1(profile))
+		respData.Profiles = append(respData.Profiles, c.mapProfileV1ToAPIProfileV1(profile))
 	}
 
-	responseJSON, err := json.Marshal(response)
-	if err != nil {
-		log.Errorf("%s %s 500 - JSON-encoding response failed: %s", r.Method, r.RequestURI, err)
-
-		w.WriteHeader(500)
-		fmt.Fprintf(w, "Internal server error")
-		return
-	}
-
-	log.Infof("%s %s 200 - Loaded %d profiles", r.Method, r.RequestURI, len(response.Profiles))
-
-	w.Header().Add("Content-Type", "application/json")
-	w.Write(responseJSON)
+	return gousuchi.JSON(r, respData).
+		WithDetailedMessage("Loaded %d profiles", len(respData.Profiles))
 }

@@ -1,5 +1,5 @@
-import { BackendService, BackendMethod } from "./BackendService";
-import { Subject } from "../Subject";
+import { BackendService, BackendMethod } from './BackendService';
+import { Subject } from 'ts-subject';
 
 
 export interface ObjectV1

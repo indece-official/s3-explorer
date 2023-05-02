@@ -1,5 +1,5 @@
-import { BackendService } from "./BackendService";
-import { Subject } from "../Subject";
+import { BackendService } from './BackendService';
+import { Subject } from 'ts-subject';
 
 
 export interface BucketV1

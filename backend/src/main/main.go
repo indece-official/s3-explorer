@@ -21,10 +21,11 @@ package main
 import (
 	"fmt"
 
-	"github.com/indece-official/go-gousu"
+	"github.com/indece-official/go-gousu/v2/gousu"
 	"github.com/indece-official/s3-explorer/backend/src/controller/ui"
 	"github.com/indece-official/s3-explorer/backend/src/controller/web"
 	"github.com/indece-official/s3-explorer/backend/src/service/s3"
+	"github.com/indece-official/s3-explorer/backend/src/service/session"
 	"github.com/indece-official/s3-explorer/backend/src/service/settings"
 	"github.com/indece-official/s3-explorer/backend/src/utils"
 )
@@ -43,6 +44,7 @@ func main() {
 
 	runner.CreateService(settings.NewService)
 	runner.CreateService(s3.NewService)
+	runner.CreateService(session.NewService)
 	runner.CreateController(web.NewController)
 	runner.CreateUIController(ui.NewController)
 

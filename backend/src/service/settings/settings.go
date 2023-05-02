@@ -25,7 +25,8 @@ import (
 	"os/user"
 	"path/filepath"
 
-	"github.com/indece-official/go-gousu"
+	"github.com/indece-official/go-gousu/v2/gousu"
+	"github.com/indece-official/go-gousu/v2/gousu/logger"
 	"github.com/indece-official/s3-explorer/backend/src/model"
 )
 
@@ -47,7 +48,7 @@ type IService interface {
 
 // Service provides a service for accesisng the settings file
 type Service struct {
-	log      *gousu.Log
+	log      *logger.Log
 	filename string
 	profiles map[int64]*model.ProfileV1
 	loaded   bool
@@ -198,7 +199,7 @@ func (s *Service) Stop() error {
 // NewService creates a new instance of the settings Service
 func NewService(ctx gousu.IContext) gousu.IService {
 	return &Service{
-		log: gousu.GetLogger(fmt.Sprintf("service.%s", ServiceName)),
+		log: logger.GetLogger(fmt.Sprintf("service.%s", ServiceName)),
 	}
 }
 

@@ -1,9 +1,9 @@
 import * as React from 'react';
 import { Modal } from '../../Shared/Modal/Modal';
 import { Link } from '../../Shared/Link/Link';
+import { LicenseLink } from '../../Shared/LicenseLink/LicenseLink';
 
 import './ModalAbout.css';
-import { LicenseLink } from '../../Shared/LicenseLink/LicenseLink';
 
 
 export interface ModalAboutProps

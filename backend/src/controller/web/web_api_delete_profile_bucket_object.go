@@ -17,78 +17,48 @@
 package web
 
 import (
-	"fmt"
 	"net/http"
 	"net/url"
-	"strconv"
 
-	"github.com/go-chi/chi"
+	"github.com/indece-official/go-gousu/gousuchi/v2"
 )
 
-func (c *Controller) reqAPIV1DeleteProfileBucketObject(w http.ResponseWriter, r *http.Request) {
-	var err error
-
-	log := c.log
-
-	profileIDStr := chi.URLParam(r, "profileID")
-	profileID, err := strconv.ParseInt(profileIDStr, 10, 64)
-	if err != nil {
-		log.Warnf("%s %s 400 - Invalid profileID '%s': %s", r.Method, r.RequestURI, profileIDStr, err)
-
-		w.WriteHeader(400)
-		fmt.Fprintf(w, "Bad request")
-		return
+func (c *Controller) reqAPIV1DeleteProfileBucketObject(w http.ResponseWriter, r *http.Request) gousuchi.IResponse {
+	errResp := c.checkAuth(r)
+	if errResp != nil {
+		return errResp
 	}
 
-	bucketName := chi.URLParam(r, "bucketName")
-	if bucketName == "" {
-		log.Warnf("%s %s 400 - Invalid bucketName '%s': %s", r.Method, r.RequestURI, bucketName, err)
-
-		w.WriteHeader(400)
-		fmt.Fprintf(w, "Bad request")
-		return
+	profileID, errResp := gousuchi.URLParamInt64(r, "profileID")
+	if errResp != nil {
+		return errResp
 	}
 
-	objectKeyRaw := chi.URLParam(r, "objectKey")
-	if objectKeyRaw == "" {
-		log.Warnf("%s %s 400 - Invalid objectKey '%s': %s", r.Method, r.RequestURI, objectKeyRaw, err)
+	bucketName, errResp := gousuchi.URLParamString(r, "bucketName")
+	if errResp != nil {
+		return errResp
+	}
 
-		w.WriteHeader(400)
-		fmt.Fprintf(w, "Bad request")
-		return
+	objectKeyRaw, errResp := gousuchi.URLParamString(r, "objectKey")
+	if errResp != nil {
+		return errResp
 	}
 
 	objectKey, err := url.QueryUnescape(objectKeyRaw)
 	if err != nil {
-		log.Warnf("%s %s 400 - Can't unescape objectKey: %s", r.Method, r.RequestURI, err)
-
-		w.WriteHeader(400)
-		fmt.Fprintf(w, "Bad request")
-		return
+		return gousuchi.BadRequest(r, "Can't unescape objectKey: %s", err)
 	}
-
-	log.Infof("Object: %s", objectKey)
 
 	profile, err := c.settingsService.GetProfile(profileID)
 	if err != nil {
-		log.Warnf("%s %s 404 - Can't load profile: %s", r.Method, r.RequestURI, err)
-
-		w.WriteHeader(404)
-		fmt.Fprintf(w, "Profile not found")
-		return
+		return gousuchi.NotFound(r, "Can't load profile: %s", err)
 	}
 
 	err = c.s3Service.DeleteObject(profile, bucketName, objectKey)
 	if err != nil {
-		log.Errorf("%s %s 500 - Can't delete object: %s", r.Method, r.RequestURI, err)
-
-		w.WriteHeader(500)
-		fmt.Fprintf(w, "S3 Error: %s", err)
-		return
+		return gousuchi.InternalServerError(r, "Can't delete object: %s", err)
 	}
 
-	log.Infof("%s %s 200 - Deleted object", r.Method, r.RequestURI)
-
-	w.Header().Add("Content-Type", "application/json")
-	fmt.Fprintf(w, "{}")
+	return gousuchi.JSON(r, map[string]interface{}{}).
+		WithDetailedMessage("Deleted object")
 }

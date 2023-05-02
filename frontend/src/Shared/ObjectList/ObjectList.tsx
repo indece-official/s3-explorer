@@ -7,6 +7,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSync, faTimes, faDownload } from '@fortawesome/free-solid-svg-icons';
 import { DownloadManagerService } from '../DownloadManager/DownloadManagerService';
 import { Spinner } from '../Spinner/Spinner';
+import { S3ProfileService } from '../Service/ProfileService';
 
 import './ObjectList.css';
 
@@ -33,6 +34,7 @@ interface ObjectListState
 export class ObjectList extends React.Component<ObjectListProps, ObjectListState>
 {
     private readonly BULK_SIZE                  = 100;
+    private readonly _s3ProfileService:         S3ProfileService;
     private readonly _s3ObjectService:          S3ObjectService;
     private readonly _downloadManagerService:   DownloadManagerService;
 
@@ -48,6 +50,7 @@ export class ObjectList extends React.Component<ObjectListProps, ObjectListState
             continuationToken:  ''
         };
 
+        this._s3ProfileService = S3ProfileService.getInstance();
         this._s3ObjectService = S3ObjectService.getInstance();
         this._downloadManagerService = DownloadManagerService.getInstance();
 
@@ -94,9 +97,9 @@ export class ObjectList extends React.Component<ObjectListProps, ObjectListState
         }
         catch ( err )
         {
-            console.error(`Error loading objects: ${err.message}`, err);
+            console.error(`Error loading objects: ${(err as Error).message}`, err);
 
-            this.props.onError(err);
+            this.props.onError(err as Error);
 
             this.setState({
                 loading:    false
@@ -135,9 +138,9 @@ export class ObjectList extends React.Component<ObjectListProps, ObjectListState
         }
         catch ( err )
         {
-            console.error(`Error loading objects: ${err.message}`, err);
+            console.error(`Error loading objects: ${(err as Error).message}`, err);
 
-            this.props.onError(err);
+            this.props.onError(err as Error);
 
             this.setState({
                 loading:    false,
@@ -161,9 +164,9 @@ export class ObjectList extends React.Component<ObjectListProps, ObjectListState
         }
         catch ( err )
         {
-            console.error(`Error downloading object ${object.key}: ${err.message}`, err);
+            console.error(`Error downloading object ${object.key}: ${(err as Error).message}`, err);
 
-            this.props.onError(err);
+            this.props.onError(err as Error);
         }
     }
 
@@ -172,6 +175,7 @@ export class ObjectList extends React.Component<ObjectListProps, ObjectListState
     {
         await this._load();
 
+        this._s3ProfileService.updated().subscribe(this, this._load);
         this._s3ObjectService.updated().subscribe(this, this._load);
     }
 
@@ -190,6 +194,7 @@ export class ObjectList extends React.Component<ObjectListProps, ObjectListState
 
     public componentWillUnmount ( ): void
     {
+        this._s3ProfileService.updated().unsubscribe(this);
         this._s3ObjectService.updated().unsubscribe(this);
     }
 

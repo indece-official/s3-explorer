@@ -1,5 +1,5 @@
-import { BackendService } from "./BackendService";
-import { Subject } from "../Subject";
+import { BackendService } from './BackendService';
+import { Subject } from 'ts-subject';
 
 
 export interface ProfileV1
@@ -21,6 +21,19 @@ export interface AddProfileV1Data
     name:       string;
     access_key: string;
     secret_key: string;
+    region:     string;
+    endpoint:   string;
+    ssl:        boolean;
+    path_style: boolean;
+    buckets:    Array<string>;
+}
+
+
+export interface UpdateProfileV1Data
+{
+    name:       string;
+    access_key: string | null;
+    secret_key: string | null;
     region:     string;
     endpoint:   string;
     ssl:        boolean;
@@ -98,7 +111,7 @@ export class S3ProfileService
     }
 
 
-    public async updateProfile ( profileID: number, data: AddProfileV1Data ): Promise<number>
+    public async updateProfile ( profileID: number, data: UpdateProfileV1Data ): Promise<number>
     {
         const resp = await this._backendService.fetchJson(
             `/api/v1/profile/${encodeURIComponent(profileID)}`,

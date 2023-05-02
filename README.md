@@ -12,7 +12,7 @@ https://indece.com/software/s3-explorer
 ## Development
 ### Requirements
 * nodejs/npm
-* go >= 1.14
+* go >= 1.17
 * docker
 * github.com/google/go-licenses
 

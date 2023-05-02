@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+//go:build windows
 // +build windows
 
 package utils
@@ -71,7 +72,7 @@ import "C"
 
 import (
 	"fmt"
-	"github.com/indece-official/go-gousu"
+	"github.com/indece-official/go-gousu/v2/gousu/logger"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -85,7 +86,7 @@ func Init() {
 	shc := modshcore.NewProc("SetProcessDpiAwareness")
 	shc.Call(uintptr(1))
 
-	gousu.DisableLogger()
+	logger.DisableLogger()
 }
 
 // SetWindowsIcons sets the window's icon loading it from the compiled in resources

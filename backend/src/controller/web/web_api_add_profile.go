@@ -18,73 +18,38 @@ package web
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
+	"github.com/indece-official/go-gousu/gousuchi/v2"
 	"github.com/indece-official/s3-explorer/backend/src/generated/model/webapi"
-	"github.com/indece-official/s3-explorer/backend/src/model"
 )
 
-func v1AddProfileJSONRequestBodyToProfileV1(requestBody *webapi.V1AddProfileJSONRequestBody) *model.ProfileV1 {
-	profile := &model.ProfileV1{}
-
-	profile.Name = requestBody.Name
-	profile.AccessKey = requestBody.AccessKey
-	profile.SecretKey = requestBody.SecretKey
-	profile.Region = requestBody.Region
-	profile.Endpoint = requestBody.Endpoint
-	profile.SSL = requestBody.Ssl
-	profile.PathStyle = requestBody.PathStyle
-	profile.Buckets = requestBody.Buckets
-
-	return profile
-
-}
-
-func (c *Controller) reqAPIV1AddProfile(w http.ResponseWriter, r *http.Request) {
-	var err error
-
-	log := c.log
+func (c *Controller) reqAPIV1AddProfile(w http.ResponseWriter, r *http.Request) gousuchi.IResponse {
+	errResp := c.checkAuth(r)
+	if errResp != nil {
+		return errResp
+	}
 
 	requestBody := &webapi.V1AddProfileJSONRequestBody{}
 
 	decoder := json.NewDecoder(r.Body)
-	err = decoder.Decode(requestBody)
+	err := decoder.Decode(requestBody)
 	if err != nil {
-		log.Warnf("%s %s 400 - Decoding JSON request body failed: %s", r.Method, r.RequestURI, err)
-
-		w.WriteHeader(400)
-		fmt.Fprintf(w, "Decoding request body failed")
-		return
+		return gousuchi.BadRequest(r, "Decoding JSON request body failed: %s", err)
 	}
 
-	profile := v1AddProfileJSONRequestBodyToProfileV1(requestBody)
+	profile := c.mapV1AddProfileJSONRequestBodyToProfileV1(requestBody)
 
 	profileID, err := c.settingsService.AddProfile(profile)
 	if err != nil {
-		log.Errorf("%s %s 500 - Can't add profile: %s", r.Method, r.RequestURI, err)
-
-		w.WriteHeader(500)
-		fmt.Fprintf(w, "Internal server error")
-		return
+		return gousuchi.InternalServerError(r, "Can't add profile: %s", err)
 	}
 
-	response := webapi.V1AddProfileJSONResponseBody{
+	respData := webapi.V1AddProfileJSONResponseBody{
 		ProfileId: profileID,
 	}
 
-	responseJSON, err := json.Marshal(response)
-	if err != nil {
-		log.Errorf("%s %s 500 - JSON-encoding response failed: %s", r.Method, r.RequestURI, err)
-
-		w.WriteHeader(500)
-		fmt.Fprintf(w, "Internal server error")
-		return
-	}
-
-	log.Infof("%s %s 201 - Added new profile %d", r.Method, r.RequestURI, profileID)
-
-	w.Header().Add("Content-Type", "application/json")
-	w.WriteHeader(201)
-	w.Write(responseJSON)
+	return gousuchi.JSON(r, respData).
+		WithStatusCode(http.StatusCreated).
+		WithDetailedMessage("Added new profile %d", profileID)
 }

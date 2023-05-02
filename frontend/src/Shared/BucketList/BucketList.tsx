@@ -4,10 +4,11 @@ import { S3BucketService, BucketV1, BucketStatsV1 } from '../Service/BucketServi
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSync, faPlus, faTimes } from '@fortawesome/free-solid-svg-icons';
 import { Button } from '../Button/Button';
-
-import './BucketList.css';
 import { MiniSpinner } from '../MiniSpinner/MiniSpinner';
 import { S3ObjectService } from '../Service/ObjectService';
+import { S3ProfileService } from '../Service/ProfileService';
+
+import './BucketList.css';
 
 
 export interface BucketListProps
@@ -30,6 +31,7 @@ interface BucketListState
 
 export class BucketList extends React.Component<BucketListProps, BucketListState>
 {
+    private readonly _s3ProfileService: S3ProfileService;
     private readonly _s3BucketService: S3BucketService;
     private readonly _s3ObjectService: S3ObjectService;
     private _latestBucketStatsQueryID: number;
@@ -45,6 +47,7 @@ export class BucketList extends React.Component<BucketListProps, BucketListState
         };
 
         this._latestBucketStatsQueryID = 1;
+        this._s3ProfileService = S3ProfileService.getInstance();
         this._s3BucketService = S3BucketService.getInstance();
         this._s3ObjectService = S3ObjectService.getInstance();
     }
@@ -73,9 +76,9 @@ export class BucketList extends React.Component<BucketListProps, BucketListState
         }
         catch ( err )
         {
-            console.error(`Error loading buckets: ${err.message}`, err);
+            console.error(`Error loading buckets: ${(err as Error).message}`, err);
 
-            this.props.onError(err);
+            this.props.onError(err as Error);
         }
     }
    
@@ -118,9 +121,9 @@ export class BucketList extends React.Component<BucketListProps, BucketListState
         }
         catch ( err )
         {
-            console.error(`Error loading bucket stats: ${err.message}`, err);
+            console.error(`Error loading bucket stats: ${(err as Error).message}`, err);
 
-            this.props.onError(err);
+            this.props.onError(err as Error);
         }
     }
 
@@ -136,6 +139,7 @@ export class BucketList extends React.Component<BucketListProps, BucketListState
         await this._load();
         await this._loadBucketStats(false);
 
+        this._s3ProfileService.updated().subscribe(this, this._load.bind(this));
         this._s3BucketService.updated().subscribe(this, this._load.bind(this));
         this._s3ObjectService.updated().subscribe(this, ( ) => this._loadBucketStats(false) );
     }
@@ -157,6 +161,7 @@ export class BucketList extends React.Component<BucketListProps, BucketListState
 
     public componentWillUnmount ( ): void
     {
+        this._s3ProfileService.updated().unsubscribe(this);
         this._s3BucketService.updated().unsubscribe(this);
         this._s3ObjectService.updated().unsubscribe(this);
     }

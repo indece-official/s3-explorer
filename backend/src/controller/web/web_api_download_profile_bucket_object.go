@@ -20,59 +20,50 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"strconv"
 
-	"github.com/go-chi/chi"
+	"github.com/indece-official/go-gousu/gousuchi/v2"
 )
 
 func (c *Controller) reqAPIV1DownloadProfileBucketObject(w http.ResponseWriter, r *http.Request) {
-	var err error
+	errResp := c.checkAuth(r)
+	if errResp != nil {
+		errResp.Write(w)
 
-	log := c.log
-
-	profileIDStr := chi.URLParam(r, "profileID")
-	profileID, err := strconv.ParseInt(profileIDStr, 10, 64)
-	if err != nil {
-		log.Warnf("%s %s 400 - Invalid profileID '%s': %s", r.Method, r.RequestURI, profileIDStr, err)
-
-		w.WriteHeader(400)
-		fmt.Fprintf(w, "Bad request")
 		return
 	}
 
-	bucketName := chi.URLParam(r, "bucketName")
-	if bucketName == "" {
-		log.Warnf("%s %s 400 - Invalid bucketName '%s': %s", r.Method, r.RequestURI, bucketName, err)
+	profileID, errResp := gousuchi.URLParamInt64(r, "profileID")
+	if errResp != nil {
+		errResp.Write(w)
 
-		w.WriteHeader(400)
-		fmt.Fprintf(w, "Bad request")
 		return
 	}
 
-	objectKeyRaw := chi.URLParam(r, "objectKey")
-	if objectKeyRaw == "" {
-		log.Warnf("%s %s 400 - Invalid objectKey '%s': %s", r.Method, r.RequestURI, objectKeyRaw, err)
+	bucketName, errResp := gousuchi.URLParamString(r, "bucketName")
+	if errResp != nil {
+		errResp.Write(w)
 
-		w.WriteHeader(400)
-		fmt.Fprintf(w, "Bad request")
+		return
+	}
+
+	objectKeyRaw, errResp := gousuchi.URLParamString(r, "objectKey")
+	if errResp != nil {
+		errResp.Write(w)
+
 		return
 	}
 
 	objectKey, err := url.QueryUnescape(objectKeyRaw)
 	if err != nil {
-		log.Warnf("%s %s 400 - Can't unescape objectKey: %s", r.Method, r.RequestURI, err)
+		gousuchi.BadRequest(r, "Can't unescape objectKey: %s", err).Write(w)
 
-		w.WriteHeader(400)
-		fmt.Fprintf(w, "Bad request")
 		return
 	}
 
 	profile, err := c.settingsService.GetProfile(profileID)
 	if err != nil {
-		log.Warnf("%s %s 404 - Can't load profile: %s", r.Method, r.RequestURI, err)
+		gousuchi.NotFound(r, "Can't load profile: %s", err).Write(w)
 
-		w.WriteHeader(404)
-		fmt.Fprintf(w, "Profile not found")
 		return
 	}
 
@@ -81,12 +72,10 @@ func (c *Controller) reqAPIV1DownloadProfileBucketObject(w http.ResponseWriter, 
 
 	err = c.s3Service.DownloadObject(profile, bucketName, objectKey, w)
 	if err != nil {
-		log.Errorf("%s %s 500 - Can't load object: %s", r.Method, r.RequestURI, err)
+		gousuchi.InternalServerError(r, "Can't load object: %s", err).Write(w)
 
-		w.WriteHeader(500)
-		fmt.Fprintf(w, "Internal server error")
 		return
 	}
 
-	log.Infof("%s %s 200 - Downloaded object", r.Method, r.RequestURI)
+	c.log.Infof("%s %s 200 - Downloaded object", r.Method, r.RequestURI)
 }

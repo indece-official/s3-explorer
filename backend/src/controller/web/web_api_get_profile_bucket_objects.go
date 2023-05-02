@@ -17,114 +17,61 @@
 package web
 
 import (
-	"encoding/json"
-	"fmt"
 	"net/http"
-	"strconv"
 
+	"github.com/indece-official/go-gousu/gousuchi/v2"
 	"github.com/indece-official/s3-explorer/backend/src/generated/model/webapi"
-	"github.com/indece-official/s3-explorer/backend/src/model"
-	"gopkg.in/guregu/null.v4"
-
-	"github.com/go-chi/chi"
 )
 
-func objectV1ToAPIObjectV1(object *model.ObjectV1) webapi.ObjectV1 {
-	apiObject := webapi.ObjectV1{}
-
-	apiObject.Key = object.Key
-	apiObject.LastModified = object.LastModified
-	apiObject.OwnerName = object.OwnerName
-	apiObject.OwnerId = object.OwnerID
-	apiObject.Size = object.Size
-
-	return apiObject
-
-}
-
-func (c *Controller) reqAPIV1GetProfileBucketObjects(w http.ResponseWriter, r *http.Request) {
-	var err error
-
-	log := c.log
-
-	profileIDStr := chi.URLParam(r, "profileID")
-	profileID, err := strconv.ParseInt(profileIDStr, 10, 64)
-	if err != nil {
-		log.Warnf("%s %s 400 - Invalid profileID '%s': %s", r.Method, r.RequestURI, profileIDStr, err)
-
-		w.WriteHeader(400)
-		fmt.Fprintf(w, "Bad request")
-		return
+func (c *Controller) reqAPIV1GetProfileBucketObjects(w http.ResponseWriter, r *http.Request) gousuchi.IResponse {
+	errResp := c.checkAuth(r)
+	if errResp != nil {
+		return errResp
 	}
 
-	bucketName := chi.URLParam(r, "bucketName")
-	if bucketName == "" {
-		log.Warnf("%s %s 400 - Invalid bucketName '%s': %s", r.Method, r.RequestURI, bucketName, err)
-
-		w.WriteHeader(400)
-		fmt.Fprintf(w, "Bad request")
-		return
+	profileID, errResp := gousuchi.URLParamInt64(r, "profileID")
+	if errResp != nil {
+		return errResp
 	}
 
-	size := int64(100)
-
-	sizeStr := r.URL.Query().Get("size")
-	if sizeStr != "" {
-		size, err = strconv.ParseInt(sizeStr, 10, 64)
-		if err != nil {
-			log.Warnf("%s %s 400 - Invalid size '%s': %s", r.Method, r.RequestURI, sizeStr, err)
-
-			w.WriteHeader(400)
-			fmt.Fprintf(w, "Bad request")
-			return
-		}
+	bucketName, errResp := gousuchi.URLParamString(r, "bucketName")
+	if errResp != nil {
+		return errResp
 	}
 
-	continuationToken := null.String{}
+	size, errResp := gousuchi.OptionalQueryParamInt64(r, "size")
+	if errResp != nil {
+		return errResp
+	}
 
-	continuationTokenStr := r.URL.Query().Get("continuation_token")
-	if continuationTokenStr != "" {
-		continuationToken.Scan(continuationTokenStr)
+	if !size.Valid {
+		size.Scan(100)
+	}
+
+	continuationToken, errResp := gousuchi.OptionalQueryParamString(r, "continuation_token")
+	if errResp != nil {
+		return errResp
 	}
 
 	profile, err := c.settingsService.GetProfile(profileID)
 	if err != nil {
-		log.Warnf("%s %s 404 - Can't load profile: %s", r.Method, r.RequestURI, err)
-
-		w.WriteHeader(404)
-		fmt.Fprintf(w, "Profile not found")
-		return
+		return gousuchi.NotFound(r, "Can't load profile: %s", err)
 	}
 
-	objects, newContinuationToken, err := c.s3Service.GetObjects(profile, bucketName, continuationToken, size)
+	objects, newContinuationToken, err := c.s3Service.GetObjects(profile, bucketName, continuationToken, size.Int64)
 	if err != nil {
-		log.Errorf("%s %s 500 - Can't load objects: %s", r.Method, r.RequestURI, err)
-
-		w.WriteHeader(500)
-		fmt.Fprintf(w, "S3 Error: %s", err)
-		return
+		return gousuchi.InternalServerError(r, "Can't load objects: %s", err)
 	}
 
-	response := webapi.V1GetProfileBucketObjectsJSONResponseBody{
+	respData := webapi.V1GetProfileBucketObjectsJSONResponseBody{
 		Objects:           []webapi.ObjectV1{},
 		ContinuationToken: newContinuationToken,
 	}
 
 	for _, object := range objects {
-		response.Objects = append(response.Objects, objectV1ToAPIObjectV1(object))
+		respData.Objects = append(respData.Objects, c.mapObjectV1ToAPIObjectV1(object))
 	}
 
-	responseJSON, err := json.Marshal(response)
-	if err != nil {
-		log.Errorf("%s %s 500 - JSON-encoding response failed: %s", r.Method, r.RequestURI, err)
-
-		w.WriteHeader(500)
-		fmt.Fprintf(w, "Internal server error")
-		return
-	}
-
-	log.Infof("%s %s 200 - Loaded %d objects", r.Method, r.RequestURI, len(response.Objects))
-
-	w.Header().Add("Content-Type", "application/json")
-	w.Write(responseJSON)
+	return gousuchi.JSON(r, respData).
+		WithDetailedMessage("Loaded %d objects", len(respData.Objects))
 }
